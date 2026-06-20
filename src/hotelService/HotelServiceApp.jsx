@@ -18,6 +18,7 @@ import ReportsPage from "./pages/hotel/ReportsPage";
 import SettingsPage from "./pages/hotel/SettingsPage";
 import RoomQrPage from "./pages/hotel/RoomQrPage";
 import DesignPage from "./pages/hotel/DesignPage";
+import ReviewsPage from "./pages/hotel/ReviewsPage";
 
 /**
  * SSO ko'prigi — RateRadar foydalanuvchisini avtomatik Mehmonxona-xizmati
@@ -108,6 +109,7 @@ export default function HotelServiceApp() {
             <Route path="qr" element={<RoomQrPage />} />
             <Route path="design" element={<DesignPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="reviews" element={<ReviewsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Settings2, BarChart2, Cog, QrCode, Circle, Palette,
+  LayoutDashboard, Users, Settings2, BarChart2, Cog, QrCode, Circle, Palette, Star,
 } from "lucide-react";
 import { useHotel } from "../../context/HotelContext";
 import { useToast } from "../../context/ToastContext";
@@ -18,6 +18,7 @@ const NAV = [
   { to: "/hotel-service/qr",        key: "qr",        icon: QrCode },
   { to: "/hotel-service/design",    key: "design",    icon: Palette },
   { to: "/hotel-service/reports",   key: "reports",   icon: BarChart2 },
+  { to: "/hotel-service/reviews",   key: "reviews",   icon: Star },
   { to: "/hotel-service/settings",  key: "settings",  icon: Cog },
 ];
 
@@ -69,11 +70,14 @@ export default function EmbeddedLayout() {
     socket.on("new_staff_registered", () => {
       toast("👤 Yangi xodim", "info");
     });
+    socket.on("new_review", ({ review }) => {
+      toast(`⭐ ${review?.rating || ""}/5 — ${t("reviews")}`, "info");
+    });
 
     return () => {
       [
         "connect", "disconnect", "new_request", "request_accepted",
-        "request_completed", "request_timeout", "new_staff_registered",
+        "request_completed", "request_timeout", "new_staff_registered", "new_review",
       ].forEach((e) => socket.off(e));
       socket.disconnect();
     };

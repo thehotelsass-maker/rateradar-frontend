@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, MapPin, Building2, Globe, Loader2, Check, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Logo } from '@/components/Logo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { AuthBrandPanel } from '@/components/AuthBrandPanel';
 import { SearchSelect } from '@/components/ui/search-select';
 import { useT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
@@ -28,6 +29,10 @@ export default function Onboarding() {
   const [useManual, setUseManual] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Shahar bo'yicha BARCHA hotellar (bir marta yuklanadi) + client-side filtr
+  const [cityHotels, setCityHotels] = useState([]);
+  const [hotelsLoading, setHotelsLoading] = useState(false);
+  const [hotelFilter, setHotelFilter] = useState('');
 
   useEffect(() => {
     searchApi.countries().then(setCountries).catch(console.error);
@@ -44,11 +49,32 @@ export default function Onboarding() {
     setHotel(null);
     setUseManual(false);
     setHotelManual({ name: '', address: '' });
+    setCityHotels([]);
+    setHotelFilter('');
   }, [city?.name, city?.lat, city?.lng]);
 
   const hotelSearchCity = city
     ? { city: city.name, lat: city.lat, lng: city.lng }
     : {};
+
+  // 3-qadamga o'tilganda — shahardagi BARCHA hotelni bir marta yuklaymiz.
+  useEffect(() => {
+    if (step !== 3 || !city || useManual || cityHotels.length) return;
+    setHotelsLoading(true);
+    searchApi
+      .hotels('', country?.code, hotelSearchCity)
+      .then((list) => setCityHotels(list || []))
+      .catch(() => setCityHotels([]))
+      .finally(() => setHotelsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, city?.name, useManual]);
+
+  // Yozilgan matn bo'yicha client-side filtr (darhol, so'rovsiz).
+  const filteredHotels = (() => {
+    const f = hotelFilter.trim().toLowerCase();
+    if (!f) return cityHotels;
+    return cityHotels.filter((h) => (h.name || '').toLowerCase().includes(f));
+  })();
 
   // Davlat qidiruvi — nom, ISO kod yoki valyuta bo'yicha filtr.
   const filteredCountries = (() => {
@@ -112,15 +138,29 @@ export default function Onboarding() {
     (step === 3 && (useManual ? hotelManual.name.length >= 2 : hotel));
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+    <div className="min-h-screen grid lg:grid-cols-2 bg-background">
+      {/* CHAP — brending paneli */}
+      <AuthBrandPanel />
 
-      <div className="relative w-full max-w-[520px] mb-3 flex justify-between items-center">
-        <Logo />
-        <LanguageSwitcher />
-      </div>
+      {/* O'NG — onboarding qadamlari */}
+      <div className="relative flex flex-col items-center justify-center p-6 sm:p-10">
+        <div className="absolute top-5 right-5">
+          <LanguageSwitcher />
+        </div>
 
-      <div className="relative w-full max-w-[520px] bg-card border rounded-2xl p-9 shadow-sm animate-fade-in">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-[520px]"
+        >
+          {/* Mobil logo */}
+          <Link to="/" className="lg:hidden flex items-center justify-center gap-2.5 mb-8">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-[hsl(221_83%_42%)] grid place-items-center font-bold text-white shadow-lg">R</div>
+            <span className="font-bold text-[15px]">TheHotelSaaS</span>
+          </Link>
+
+          <div className="bg-card border rounded-2xl p-8 shadow-lg">
         {/* Stepper */}
         <div className="flex gap-2 mb-7">
           {[1, 2, 3].map((s) => (
@@ -236,23 +276,89 @@ export default function Onboarding() {
           <div className="space-y-3">
             {!useManual ? (
               <>
-                <SearchSelect
-                  placeholder={t('hotelPlaceholder')}
-                  fetchOptions={(q) => searchApi.hotels(q, country?.code, hotelSearchCity)}
-                  getKey={(h) => h.placeId || h.osmId || h.name}
-                  getLabel={(h) => h.name}
-                  renderOption={(h) => (
-                    <div>
-                      <div className="text-sm font-medium">{h.name}</div>
-                      <div className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <Building2 className="h-3 w-3" />
-                        {h.address}
-                      </div>
+                {/* Filtr (darhol, client-side) */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={hotelFilter}
+                    onChange={(e) => setHotelFilter(e.target.value)}
+                    placeholder={t('hotelPlaceholder')}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+
+                {/* Topilgan soni */}
+                {!hotelsLoading && cityHotels.length > 0 && (
+                  <div className="text-[11px] text-muted-foreground">
+                    {filteredHotels.length} / {cityHotels.length} {t('hotelsFound')}
+                  </div>
+                )}
+
+                <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                  {hotelsLoading ? (
+                    <div className="flex items-center justify-center py-8 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     </div>
+                  ) : filteredHotels.length === 0 ? (
+                    <div className="text-center py-6 text-sm text-muted-foreground">
+                      {cityHotels.length === 0 ? t('noHotelsInCity') : t('noResults')}
+                    </div>
+                  ) : (
+                    filteredHotels.map((h) => {
+                      const key = h.placeId || h.osmId || h.name;
+                      const selKey = hotel && (hotel.placeId || hotel.osmId || hotel.name);
+                      const isSel = selKey === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setHotel(h)}
+                          className={cn(
+                            'w-full flex items-start gap-3 p-3 rounded-lg border transition-colors text-left',
+                            isSel ? 'border-primary bg-primary/5' : 'border-border hover:border-input hover:bg-accent'
+                          )}
+                        >
+                          <Building2 className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium truncate">{h.name}</div>
+                            {h.address && (
+                              <div className="text-[11px] text-muted-foreground truncate">{h.address}</div>
+                            )}
+                          </div>
+                          {isSel && <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />}
+                        </button>
+                      );
+                    })
                   )}
-                  selected={hotel}
-                  onSelect={setHotel}
-                />
+                </div>
+
+                {/* 2-qidiruv — to'g'ridan-to'g'ri Google API (ro'yxatda yo'q hotel uchun) */}
+                <div className="pt-2 border-t">
+                  <div className="text-[11px] text-muted-foreground mb-1.5">
+                    {t('liveSearchLabel')}
+                  </div>
+                  <SearchSelect
+                    placeholder={t('liveSearchPlaceholder')}
+                    fetchOptions={(q) =>
+                      searchApi.hotels(q, country?.code, hotelSearchCity, { direct: true })
+                    }
+                    getKey={(h) => h.placeId || h.osmId || h.name}
+                    getLabel={(h) => h.name}
+                    renderOption={(h) => (
+                      <div>
+                        <div className="text-sm font-medium">{h.name}</div>
+                        <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                          <Building2 className="h-3 w-3" />
+                          {h.address}
+                        </div>
+                      </div>
+                    )}
+                    selected={hotel}
+                    onSelect={setHotel}
+                  />
+                </div>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -305,6 +411,7 @@ export default function Onboarding() {
         <div className="flex justify-between gap-3 mt-7">
           <Button
             variant="outline"
+            className="rounded-full"
             onClick={() => setStep(step - 1)}
             disabled={step === 1 || loading}
           >
@@ -313,12 +420,12 @@ export default function Onboarding() {
           </Button>
 
           {step < 3 ? (
-            <Button onClick={() => setStep(step + 1)} disabled={!canProceed}>
+            <Button className="rounded-full" onClick={() => setStep(step + 1)} disabled={!canProceed}>
               {t('next')}
               <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={!canProceed || loading}>
+            <Button className="rounded-full" onClick={handleSubmit} disabled={!canProceed || loading}>
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -328,6 +435,8 @@ export default function Onboarding() {
             </Button>
           )}
         </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

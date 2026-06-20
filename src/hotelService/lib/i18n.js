@@ -95,6 +95,10 @@ export const ADMIN_T = {
     // Nav
     dashboard: "Ish jarayoni", staff: "Xodimlar", services: "Xizmat turlari",
     reports: "Hisobot", settings: "Sozlamalar", qr: "Xona QR kodlari", design: "Dizayn", logout: "Chiqish",
+    reviews: "Sharhlar",
+    reviewsTitle: "Mehmon sharhlari", reviewsDesc: "Mehmonlar mehmonxona haqida qoldirgan baho va izohlar",
+    avgRating: "O'rtacha baho", totalReviews: "Jami sharh", noReviews: "Hali sharh yo'q",
+    anonymous: "Mehmon", ratingCol: "Baho", commentCol: "Izoh",
     // Common
     loading: "Yuklanmoqda...", save: "Saqlash", cancel: "Bekor", delete: "O'chirish",
     edit: "Tahrirlash", back: "Orqaga", refresh: "Yangilash", add: "Qo'shish",
@@ -139,6 +143,10 @@ export const ADMIN_T = {
   ru: {
     dashboard: "Рабочий процесс", staff: "Сотрудники", services: "Виды услуг",
     reports: "Отчёт", settings: "Настройки", qr: "QR-коды номеров", design: "Дизайн", logout: "Выход",
+    reviews: "Отзывы",
+    reviewsTitle: "Отзывы гостей", reviewsDesc: "Оценки и комментарии гостей об отеле",
+    avgRating: "Средняя оценка", totalReviews: "Всего отзывов", noReviews: "Пока нет отзывов",
+    anonymous: "Гость", ratingCol: "Оценка", commentCol: "Комментарий",
     loading: "Загрузка...", save: "Сохранить", cancel: "Отмена", delete: "Удалить",
     edit: "Изменить", back: "Назад", refresh: "Обновить", add: "Добавить",
     copy: "Копировать", copied: "Скопировано", confirm: "Подтвердить",
@@ -175,6 +183,10 @@ export const ADMIN_T = {
   en: {
     dashboard: "Dashboard", staff: "Staff", services: "Services",
     reports: "Reports", settings: "Settings", qr: "Room QR codes", design: "Design", logout: "Logout",
+    reviews: "Reviews",
+    reviewsTitle: "Guest reviews", reviewsDesc: "Ratings and comments guests left about the hotel",
+    avgRating: "Average rating", totalReviews: "Total reviews", noReviews: "No reviews yet",
+    anonymous: "Guest", ratingCol: "Rating", commentCol: "Comment",
     loading: "Loading...", save: "Save", cancel: "Cancel", delete: "Delete",
     edit: "Edit", back: "Back", refresh: "Refresh", add: "Add",
     copy: "Copy", copied: "Copied!", confirm: "Confirm",
@@ -242,4 +254,14 @@ export const EN_BASE = {
   errorSend:        "Failed to send. Please try again.",
   retry:            "Try Again",
   serviceUnavailable: "Service is currently unavailable.",
+  // Mehmon sharhi (Review kartasi)
+  reviewCard:       "Review",
+  reviewTitle:      "How was your stay?",
+  reviewHint:       "Your feedback helps us serve you better",
+  reviewRate:       "Your rating",
+  reviewComment:    "Tell us more (optional)",
+  reviewSend:       "Submit review",
+  reviewThanks:     "Thank you for your feedback!",
+  reviewRateFirst:  "Please tap a star to rate",
+  close:            "Close",
 };

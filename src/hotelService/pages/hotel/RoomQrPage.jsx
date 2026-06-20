@@ -129,9 +129,11 @@ export default function RoomQrPage() {
     if (!rooms.length) return;
     try {
       setBusy(true);
-      // Joriy origin (masalan http://192.168.1.10:5173) — QR shu manzilni
-      // yozadi, shunda bir xil Wi-Fi'dagi telefon ocha oladi.
-      await qrApi.generate(hotelId, rooms, window.location.origin);
+      // QR kodga yoziladigan PUBLIC manzil. VITE_PUBLIC_URL berilgan bo'lsa
+      // (production), o'shani ishlatamiz — shunda QR localhost emas, haqiqiy
+      // domenni kodlaydi va istalgan mehmon telefoni ocha oladi.
+      const guestBase = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
+      await qrApi.generate(hotelId, rooms, guestBase);
       setRoomsInput("");
       toast(t("added"), "success");
       setOffline(false);

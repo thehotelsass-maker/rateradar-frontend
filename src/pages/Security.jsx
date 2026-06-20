@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  Shield, ShieldAlert, Ban, Activity, Loader2, RefreshCw, AlertTriangle,
+  Shield, ShieldAlert, Ban, Activity, Loader2, RefreshCw, AlertTriangle, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useT } from '@/lib/i18n';
 import { securityApi } from '@/lib/api';
+import { parseUA, deviceIcon } from '@/lib/ua';
 
 const SEV_COLOR = {
   low: 'bg-muted text-muted-foreground',
@@ -35,13 +36,17 @@ export default function Security() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [banForm, setBanForm] = useState({ ip: '', permanent: false });
+  // Bitta IP faoliyatini filtrlash (qaysi sahifa, qaysi qurilma)
+  const [ipFilter, setIpFilter] = useState('');
+  const ipFilterRef = useRef('');
 
   async function load() {
     setBusy(true);
     try {
+      const ipQ = ipFilterRef.current || undefined;
       const [ov, ev, bn] = await Promise.all([
         securityApi.overview(),
-        securityApi.events({ limit: 50 }),
+        securityApi.events({ limit: 100, ip: ipQ }),
         securityApi.banned(),
       ]);
       setOverview(ov);
@@ -53,6 +58,17 @@ export default function Security() {
       setLoading(false);
       setBusy(false);
     }
+  }
+
+  function applyIpFilter(ip) {
+    ipFilterRef.current = ip;
+    setIpFilter(ip);
+    load();
+  }
+  function clearIpFilter() {
+    ipFilterRef.current = '';
+    setIpFilter('');
+    load();
   }
   useEffect(() => {
     load();
@@ -211,7 +227,19 @@ export default function Security() {
 
         {/* So'nggi hodisalar */}
         <div className="lg:col-span-2 rounded-xl border bg-card overflow-hidden">
-          <div className="px-5 py-3 border-b text-sm font-medium">{t('secRecentEvents')}</div>
+          <div className="px-5 py-3 border-b text-sm font-medium flex items-center justify-between gap-3">
+            <span>{t('secRecentEvents')}</span>
+            {ipFilter && (
+              <button
+                onClick={clearIpFilter}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium"
+              >
+                <code>{ipFilter}</code>
+                <X className="h-3 w-3" />
+                <span className="text-[10px] opacity-70">{t('secClearFilter')}</span>
+              </button>
+            )}
+          </div>
           {events.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">{t('secEmptyState')}</div>
           ) : (
@@ -222,24 +250,46 @@ export default function Security() {
                     <th className="text-left font-medium px-4 py-2">{t('secTime')}</th>
                     <th className="text-left font-medium px-4 py-2">{t('secType')}</th>
                     <th className="text-left font-medium px-4 py-2">{t('secIp')}</th>
-                    <th className="text-left font-medium px-4 py-2">{t('secDetail')}</th>
+                    <th className="text-left font-medium px-4 py-2">{t('secDevice')}</th>
+                    <th className="text-left font-medium px-4 py-2">{t('secRequest')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {events.map((e) => (
-                    <tr key={e._id} className="border-t hover:bg-accent/30">
-                      <td className="px-4 py-2 text-xs text-muted-foreground whitespace-nowrap">{fmtTime(e.createdAt)}</td>
-                      <td className="px-4 py-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${SEV_COLOR[e.severity] || ''}`}>
-                          {TYPE_LABEL[e.type] || e.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2"><code className="text-xs">{e.ip}</code></td>
-                      <td className="px-4 py-2 text-xs text-muted-foreground max-w-[220px] truncate" title={`${e.detail || ''} ${e.path || ''}`}>
-                        {e.detail || e.path || '—'}
-                      </td>
-                    </tr>
-                  ))}
+                  {events.map((e) => {
+                    const ua = parseUA(e.userAgent);
+                    return (
+                      <tr key={e._id} className="border-t hover:bg-accent/30 align-top">
+                        <td className="px-4 py-2 text-xs text-muted-foreground whitespace-nowrap">{fmtTime(e.createdAt)}</td>
+                        <td className="px-4 py-2">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${SEV_COLOR[e.severity] || ''}`}>
+                            {TYPE_LABEL[e.type] || e.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2">
+                          <button
+                            onClick={() => applyIpFilter(e.ip)}
+                            title={t('secFilterByIp')}
+                            className="text-xs font-mono text-primary hover:underline"
+                          >
+                            {e.ip}
+                          </button>
+                        </td>
+                        <td className="px-4 py-2 text-xs whitespace-nowrap" title={e.userAgent || '—'}>
+                          <span className="mr-1">{deviceIcon(ua.device)}</span>
+                          <span className={ua.bot ? 'text-red-500 font-medium' : 'text-foreground'}>{ua.label}</span>
+                        </td>
+                        <td className="px-4 py-2 max-w-[260px]" title={`${e.detail || ''}\n${e.method || ''} ${e.path || ''}\n${e.userAgent || ''}`}>
+                          {e.detail && <div className="text-xs text-foreground truncate">{e.detail}</div>}
+                          {e.path && (
+                            <div className="text-[11px] text-muted-foreground font-mono truncate">
+                              {e.method && <span className="text-primary/70">{e.method} </span>}{e.path}
+                            </div>
+                          )}
+                          {!e.detail && !e.path && <span className="text-xs text-muted-foreground">—</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

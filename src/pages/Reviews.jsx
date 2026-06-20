@@ -167,6 +167,14 @@ export default function Reviews() {
         <div className="text-xs text-muted-foreground -mt-2 ml-1">{scrapeMsg}</div>
       )}
 
+      {data?.tripadvisorConfigured && (
+        <TripAdvisorCard
+          ta={data?.tripAdvisor}
+          lang={lang}
+          onScraped={(msg) => { setScrapeMsg(msg); load(); }}
+        />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-3">
         <ApifySourceCard
           source="booking"
@@ -274,6 +282,88 @@ const SOURCE_BORDER = {
   trip: 'border-sky-200 dark:border-sky-800/50',
   yandex: 'border-amber-200 dark:border-amber-800/50',
 };
+
+// TripAdvisor rasmiy Content API kartasi — reyting + ranking + sharhlar soni.
+function TripAdvisorCard({ ta, lang, onScraped }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const l = (uz, ru, en) => (lang === 'uz' ? uz : lang === 'ru' ? ru : en);
+  const brand = getOtaBrand('TripAdvisor');
+  const hasData = ta && ta.locationId;
+
+  const run = async (reset = false) => {
+    setBusy(true);
+    setMsg('');
+    try {
+      const res = await reviewApi.scrapeTripadvisor(reset);
+      const summary = res.message || l('Yangilandi', 'Обновлено', 'Updated');
+      setMsg(summary);
+      onScraped?.(`✓ ${summary}`);
+    } catch (err) {
+      setMsg(err.response?.data?.error || err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card className="border-emerald-200 dark:border-emerald-800/50">
+      <CardContent className="py-3.5 flex items-center gap-4 flex-wrap">
+        <div className={cn(
+          'w-11 h-11 rounded-xl text-white font-semibold text-sm flex items-center justify-center shrink-0 shadow-soft',
+          brand.gradient
+        )}>
+          {brand.short}
+        </div>
+
+        {hasData ? (
+          <>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold tracking-tight">{ta.rating ? ta.rating.toFixed(1) : '—'}</span>
+              <span className="text-xs text-muted-foreground">/5</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-medium flex items-center gap-1.5">
+                TripAdvisor
+                {ta.priceLevel && <span className="text-muted-foreground">· {ta.priceLevel}</span>}
+              </div>
+              {ta.ranking && (
+                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium truncate">🏆 {ta.ranking}</div>
+              )}
+              <div className="text-[11px] text-muted-foreground">
+                {ta.reviewCount?.toLocaleString() || 0} {l('sharh', 'отзывов', 'reviews')}
+                {ta.url && (
+                  <> · <a href={ta.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{l('Sahifa', 'Страница', 'View')} →</a></>
+                )}
+              </div>
+              {msg && <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">{msg}</div>}
+            </div>
+          </>
+        ) : (
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-medium">TripAdvisor</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">
+              {l('Reyting, ranking va 5 ta sharh — tugmani bosing', 'Рейтинг, ранкинг и 5 отзывов — нажмите', 'Rating, ranking & 5 reviews — click fetch')}
+            </div>
+            {msg && <div className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">{msg}</div>}
+          </div>
+        )}
+
+        <div className="flex items-center gap-1.5">
+          {hasData && (
+            <Button variant="outline" size="sm" onClick={() => run(true)} disabled={busy} title={l('Qayta moslash', 'Пересопоставить', 'Re-match')}>
+              <RefreshCw className={cn('h-3.5 w-3.5', busy && 'animate-spin')} />
+            </Button>
+          )}
+          <Button variant="default" size="sm" onClick={() => run(false)} disabled={busy}>
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            {busy ? l('Yuklanmoqda...', 'Загрузка...', 'Loading...') : l('Olib kelish', 'Загрузить', 'Fetch')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 function ApifySourceCard({ source, label, url, configured, lang, onScraped }) {
   const [busy, setBusy] = useState(false);

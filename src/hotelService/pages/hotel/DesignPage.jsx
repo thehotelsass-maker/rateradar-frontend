@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { Check, Palette, Image as ImageIcon, Type, Smartphone, ArrowRight } from "lucide-react";
+import { Check, Palette, Image as ImageIcon, Type, Smartphone, ArrowRight, LayoutTemplate } from "lucide-react";
 import { useHotel } from "../../context/HotelContext";
 import { useToast } from "../../context/ToastContext";
+import { TEMPLATES, DecorHeader, DecorBg } from "../../lib/templates";
 import api from "../../lib/api";
 
 const TXT = {
   uz: {
     title: "Dizayn", desc: "Mehmon QR orqali ochadigan sahifa ko'rinishini sozlang.",
+    templates: "Tayyor shablonlar", templatesHint: "Bittasini tanlang — rang va bezak avtomatik qo'llanadi.",
     theme: "Mavzu (tayyor ranglar)", color: "Asosiy rang", logo: "Logo havolasi (ixtiyoriy)",
     logoHint: "Rasm URL'i (https://...). Bo'sh qoldirsangiz mehmonxona nomi ko'rinadi.",
     welcome: "Salomlashuv matni (ixtiyoriy)", welcomeHint: "Masalan: Xush kelibsiz! Sizga qanday yordam bera olamiz?",
@@ -18,6 +20,7 @@ const TXT = {
   },
   ru: {
     title: "Дизайн", desc: "Настройте вид страницы, которую открывает гость по QR.",
+    templates: "Готовые шаблоны", templatesHint: "Выберите один — цвет и узор применятся автоматически.",
     theme: "Тема (готовые цвета)", color: "Основной цвет", logo: "Ссылка на логотип (необяз.)",
     logoHint: "URL изображения (https://...). Если пусто — показывается название отеля.",
     welcome: "Приветствие (необяз.)", welcomeHint: "Например: Добро пожаловать! Чем помочь?",
@@ -28,6 +31,7 @@ const TXT = {
   },
   en: {
     title: "Design", desc: "Customize the page guests open via the QR code.",
+    templates: "Ready-made templates", templatesHint: "Pick one — color and decoration apply automatically.",
     theme: "Theme (presets)", color: "Primary color", logo: "Logo URL (optional)",
     logoHint: "Image URL (https://...). Leave empty to show the hotel name.",
     welcome: "Welcome text (optional)", welcomeHint: "e.g. Welcome! How can we help you?",
@@ -62,7 +66,7 @@ export default function DesignPage() {
   const { toast } = useToast();
 
   const [b, setB] = useState({
-    theme: "blue", primary_color: "#2563eb", logo_url: "", welcome_text: "", bg_style: "light",
+    theme: "blue", template: "", primary_color: "#2563eb", logo_url: "", welcome_text: "", bg_style: "light",
   });
   const [saving, setSaving] = useState(false);
 
@@ -75,6 +79,9 @@ export default function DesignPage() {
   const set = (patch) => setB((p) => ({ ...p, ...patch }));
 
   const pickPreset = (preset) => set({ theme: preset.key, primary_color: preset.color });
+
+  const pickTemplate = (tpl) =>
+    set({ template: tpl.key, primary_color: tpl.primary, bg_style: tpl.bg });
 
   const save = async () => {
     try {
@@ -104,6 +111,42 @@ export default function DesignPage() {
             <Palette size={20} className="text-blue-600" /> {t("title")}
           </h1>
           <p className="text-sm text-gray-400 mt-1">{t("desc")}</p>
+        </div>
+
+        {/* Tayyor shablonlar */}
+        <div className="card p-4">
+          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <LayoutTemplate size={13} /> {t("templates")}
+          </label>
+          <p className="text-xs text-gray-400 mb-3">{t("templatesHint")}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {TEMPLATES.map((tpl) => {
+              const cbg = tpl.bg === "dark" ? "#0f172a" : tpl.bg === "soft" ? "#f1f5f9" : "#ffffff";
+              const cfg = tpl.bg === "dark" ? "#e2e8f0" : "#111827";
+              const active = b.template === tpl.key;
+              return (
+                <button key={tpl.key} onClick={() => pickTemplate(tpl)}
+                  className={`relative rounded-2xl border-2 overflow-hidden text-left transition-transform hover:scale-[1.03] ${active ? "border-blue-600 ring-2 ring-blue-200" : "border-gray-200"}`}>
+                  <div className="relative h-[124px] overflow-hidden" style={{ backgroundColor: cbg, color: cfg }}>
+                    <DecorBg templateKey={tpl.key} primary={tpl.primary} />
+                    <DecorHeader templateKey={tpl.key} primary={tpl.primary} pageBg={cbg}>
+                      <div className="px-2.5 pt-2 pb-4 text-[10px] font-bold truncate">{tpl.name}</div>
+                    </DecorHeader>
+                    <div className="relative z-10 p-2.5 pt-2 grid grid-cols-2 gap-1">
+                      <div className="h-5 rounded-md" style={{ background: `${tpl.primary}22`, border: `1px solid ${tpl.primary}` }} />
+                      <div className="h-5 rounded-md" style={{ background: cbg, border: `1px solid ${tpl.primary}33` }} />
+                    </div>
+                    <div className="relative z-10 mx-2.5 h-4 rounded-md" style={{ background: tpl.primary }} />
+                    {active && (
+                      <div className="absolute top-1.5 right-1.5 z-20 w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shadow">
+                        <Check size={12} />
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Mavzu */}
@@ -174,19 +217,21 @@ export default function DesignPage() {
           <Smartphone size={13} /> {t("preview")}
         </p>
         <div className="mx-auto w-[300px] rounded-[2rem] border-[10px] border-gray-900 shadow-xl overflow-hidden">
-          <div className="h-[560px] overflow-y-auto" style={{ backgroundColor: bg, color: fg }}>
-            {/* Header */}
-            <div className={`sticky top-0 px-3 border-b relative flex items-center ${b.logo_url ? "justify-center h-[60px]" : "h-14 gap-2"}`}
-              style={{ backgroundColor: bg, borderColor: cardBorder }}>
-              {b.logo_url ? (
-                <img src={b.logo_url} alt="" className="h-10 w-auto max-w-[55%] object-contain" />
-              ) : (
-                <span className="font-semibold text-sm truncate" style={{ color: fg }}>{hotel?.hotel_name || "Hotel"}</span>
-              )}
-              <span className={`text-[10px] px-2 py-1 rounded-lg border ${b.logo_url ? "absolute right-3" : "ml-auto"}`} style={{ borderColor: cardBorder, color: sub }}>EN</span>
-            </div>
+          <div className="relative h-[560px] overflow-y-auto" style={{ backgroundColor: bg, color: fg }}>
+            <DecorBg templateKey={b.template} primary={b.primary_color} />
+            {/* Premium rangli header banner */}
+            <DecorHeader templateKey={b.template} primary={b.primary_color} pageBg={bg}>
+              <div className={`relative px-3 pt-3 pb-7 flex items-center ${b.logo_url ? "justify-center" : "gap-2"}`}>
+                {b.logo_url ? (
+                  <img src={b.logo_url} alt="" className="h-10 w-auto max-w-[55%] object-contain drop-shadow" />
+                ) : (
+                  <span className="font-bold text-sm truncate text-white" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.25)" }}>{hotel?.hotel_name || "Hotel"}</span>
+                )}
+                <span className={`text-[10px] px-2 py-1 rounded-lg bg-white/20 text-white ${b.logo_url ? "absolute right-3 top-3" : "ml-auto"}`}>EN</span>
+              </div>
+            </DecorHeader>
 
-            <div className="px-4 py-4 space-y-4">
+            <div className="relative z-10 px-4 py-4 space-y-4">
               {b.welcome_text && <p className="text-sm" style={{ color: sub }}>{b.welcome_text}</p>}
 
               <div>

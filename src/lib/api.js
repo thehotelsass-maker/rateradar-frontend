@@ -52,9 +52,12 @@ export const searchApi = {
     api
       .get("/search/cities", { params: { q, country } })
       .then((r) => r.data.cities),
-  hotels: (q, country, city) =>
+  hotels: (q, country, city, opts = {}) =>
     api
-      .get("/search/hotels", { params: { q, country, ...city } })
+      .get("/search/hotels", {
+        params: { q, country, ...city, ...(opts.direct && { direct: 1 }) },
+        timeout: opts.direct ? 20000 : undefined, // jonli Google qidiruvi sekinroq
+      })
       .then((r) => r.data.hotels),
   geocode: (address) =>
     api.get("/search/geocode", { params: { address } }).then((r) => r.data),
@@ -178,6 +181,10 @@ export const reviewApi = {
     api.post(`/reviews/${id}/generate-response`, { lang }).then((r) => r.data),
   scrapeApify: (opts = {}) =>
     api.post("/reviews/scrape-apify", opts, { timeout: 6 * 60 * 1000 }).then((r) => r.data),
+  scrapeTripadvisor: (reset = false) =>
+    api
+      .post("/reviews/scrape-tripadvisor", null, { params: reset ? { reset: true } : {}, timeout: 60 * 1000 })
+      .then((r) => r.data),
 };
 
 export const paymentApi = {

@@ -58,15 +58,15 @@ export function PublicNavbar() {
           <div className="hidden md:flex items-center gap-2">
             <LanguageSwitcher />
             {token && user ? (
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="rounded-full">
                 <Link to="/dashboard">{t('dashboard')}</Link>
               </Button>
             ) : (
               <>
-                <Button asChild variant="ghost" size="sm">
+                <Button asChild variant="ghost" size="sm" className="rounded-full">
                   <Link to="/login">{t('login')}</Link>
                 </Button>
-                <Button asChild size="sm">
+                <Button asChild size="sm" className="rounded-full">
                   <Link to="/register">{t('signUp')}</Link>
                 </Button>
               </>
@@ -97,15 +97,15 @@ export function PublicNavbar() {
             <div className="pt-3 border-t flex items-center justify-between gap-2">
               <LanguageSwitcher />
               {token && user ? (
-                <Button asChild size="sm" className="flex-1">
+                <Button asChild size="sm" className="flex-1 rounded-full">
                   <Link to="/dashboard">{t('dashboard')}</Link>
                 </Button>
               ) : (
                 <div className="flex gap-2 flex-1">
-                  <Button asChild variant="outline" size="sm" className="flex-1">
+                  <Button asChild variant="outline" size="sm" className="flex-1 rounded-full">
                     <Link to="/login">{t('login')}</Link>
                   </Button>
-                  <Button asChild size="sm" className="flex-1">
+                  <Button asChild size="sm" className="flex-1 rounded-full">
                     <Link to="/register">{t('signUp')}</Link>
                   </Button>
                 </div>

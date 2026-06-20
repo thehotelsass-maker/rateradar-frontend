@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, RefreshCw, Globe, ChevronDown, Search, Check, X } from "lucide-react";
+import { ArrowRight, RefreshCw, Globe, ChevronDown, Search, Check, X, Star, MessageSquareHeart } from "lucide-react";
 import { useGuestLang }       from "../../context/GuestLangContext";
 import { ALL_LANGUAGES, getLangDir } from "../../lib/i18n";
 import { addToHistory }       from "../../lib/history";
+import { DecorHeader, DecorBg } from "../../lib/templates";
 import api                    from "../../lib/api";
 
 // Inline til dropdown (guest uchun)
@@ -84,9 +85,19 @@ export default function ServicePage() {
   const [room,        setRoom]        = useState(roomParam || localStorage.getItem("guest_room") || "");
   const [roomErr,     setRoomErr]     = useState("");
   const [selected,    setSelected]    = useState(null);
+  const [showService, setShowService] = useState(false);
   const [subOption,   setSubOption]   = useState("");
   const [description, setDescription] = useState("");
   const [descErr,     setDescErr]     = useState("");
+
+  // Sharh (Review) modali
+  const [showReview,    setShowReview]    = useState(false);
+  const [rating,        setRating]        = useState(0);
+  const [hoverStar,     setHoverStar]     = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewBusy,    setReviewBusy]    = useState(false);
+  const [reviewDone,    setReviewDone]    = useState(false);
+  const [reviewErr,     setReviewErr]     = useState("");
 
   // Brauzer tilini detect qilish (birinchi kirish uchun)
   useEffect(() => {
@@ -123,6 +134,20 @@ export default function ServicePage() {
     } finally { setLoading(false); }
   };
 
+  // Xizmat kartasiga bosilganda — modal ochamiz (xona raqami to'ldirilgan bo'lsa)
+  const openService = (svc) => {
+    if (!room.trim()) {
+      setRoomErr(t("roomRequired"));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setSelected(svc);
+    setSubOption("");
+    setDescription("");
+    setDescErr("");
+    setShowService(true);
+  };
+
   const handleSubmit = () => {
     if (!room.trim()) { setRoomErr(t("roomRequired")); return; }
     if (!selected) return;
@@ -133,6 +158,33 @@ export default function ServicePage() {
       sub_option: subOption || null,
       description: description.trim() || null,
     }});
+  };
+
+  const submitReview = async () => {
+    if (!rating) { setReviewErr(t("reviewRateFirst")); return; }
+    try {
+      setReviewBusy(true); setReviewErr("");
+      await api.post("/guest/reviews", {
+        hotel_id: hotelId,
+        room_number: room.trim() || null,
+        rating,
+        comment: reviewComment.trim() || null,
+        guest_lang: lang,
+      });
+      setReviewDone(true);
+    } catch {
+      setReviewErr(t("errorSend"));
+    } finally {
+      setReviewBusy(false);
+    }
+  };
+
+  const closeReview = () => {
+    setShowReview(false);
+    setTimeout(() => {
+      setReviewDone(false); setRating(0); setHoverStar(0);
+      setReviewComment(""); setReviewErr("");
+    }, 220);
   };
 
   if (loading) return (
@@ -165,35 +217,37 @@ export default function ServicePage() {
   const lbl = { color: subc };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: pageBg, color: fg }} dir={getLangDir(lang)}>
-      {/* Header */}
-      <div className="sticky top-0 backdrop-blur border-b z-10" style={{ backgroundColor: headerBg, borderColor: cardBorder }}>
-        <div className={`max-w-lg mx-auto relative flex items-center px-4 ${brand.logo_url ? "justify-center h-[72px] sm:h-20" : "h-14 gap-3"}`}>
+    <div className="relative min-h-screen" style={{ backgroundColor: pageBg, color: fg }} dir={getLangDir(lang)}>
+      <DecorBg templateKey={brand.template} primary={primary} />
+
+      {/* Premium rangli header banner */}
+      <DecorHeader templateKey={brand.template} primary={primary} pageBg={pageBg}>
+        <div className={`max-w-lg mx-auto relative flex items-center px-4 pt-4 pb-9 ${brand.logo_url ? "justify-center" : "gap-3"}`}>
           {brand.logo_url
-            ? <img src={brand.logo_url} alt={hotel?.hotel_name} className="h-12 sm:h-14 w-auto max-w-[55%] object-contain" />
-            : <p className="font-semibold text-sm flex-1 truncate" style={{ color: fg }}>{hotel?.hotel_name}</p>}
-          <div className={brand.logo_url ? "absolute right-3 top-1/2 -translate-y-1/2" : ""}>
+            ? <img src={brand.logo_url} alt={hotel?.hotel_name} className="h-12 sm:h-14 w-auto max-w-[55%] object-contain drop-shadow" />
+            : <p className="font-bold text-base sm:text-lg flex-1 truncate text-white" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.25)" }}>{hotel?.hotel_name}</p>}
+          <div className={brand.logo_url ? "absolute right-4 top-4" : ""}>
             <LangDropdown lang={lang} onChangeLang={changeLang} translating={translating} />
           </div>
         </div>
-      </div>
+      </DecorHeader>
 
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-6 pb-24">
+      <div className="relative z-10 max-w-lg mx-auto px-4 py-5 space-y-6 pb-10">
         {brand.welcome_text && (
           <p className="text-sm -mb-2" style={{ color: subc }}>{brand.welcome_text}</p>
         )}
 
-        {/* Xona raqami */}
+        {/* Xona raqami — ixcham */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider mb-2 block" style={lbl}>
+          <label className="text-xs font-semibold uppercase tracking-wider mb-1.5 block" style={lbl}>
             {t("enterRoom")}
           </label>
           <input type="text" value={room}
             onChange={e => { setRoom(e.target.value); setRoomErr(""); }}
             placeholder={t("roomPlaceholder")}
             readOnly={!!roomParam}
-            style={{ backgroundColor: cardBg, color: fg, borderColor: roomErr ? "#f87171" : cardBorder }}
-            className={`input text-2xl font-bold text-center tracking-widest ${roomParam ? "cursor-default" : ""}`}
+            style={{ backgroundColor: cardBg, color: fg, borderColor: roomErr ? "#f87171" : cardBorder, padding: "10px 14px" }}
+            className={`input text-base font-bold text-center tracking-wide ${roomParam ? "cursor-default" : ""}`}
             autoComplete="off" />
           {roomErr && <p className="text-red-500 text-xs mt-1.5">{roomErr}</p>}
         </div>
@@ -204,74 +258,168 @@ export default function ServicePage() {
             {t("howHelp")}
           </p>
           <div className="grid grid-cols-2 gap-3">
-            {services.map(svc => {
-              const isSelected = selected?._id === svc._id;
-              return (
-                <button key={svc._id}
-                  onClick={() => { setSelected(svc); setSubOption(""); setDescription(""); setDescErr(""); }}
-                  style={{
-                    borderColor: isSelected ? primary : cardBorder,
-                    backgroundColor: isSelected ? `${primary}14` : cardBg,
-                  }}
-                  className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 text-center transition-all">
-                  <span className="text-3xl">{svc.icon || "🛎"}</span>
-                  <span className="text-xs font-semibold leading-tight" style={{ color: isSelected ? primary : fg }}>
-                    {svc.translated_name || svc.name}
-                  </span>
-                </button>
-              );
-            })}
+            {services.map(svc => (
+              <button key={svc._id}
+                onClick={() => openService(svc)}
+                style={{ borderColor: cardBorder, backgroundColor: cardBg }}
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 text-center transition-all active:scale-[0.97] hover:shadow-md">
+                <span className="text-3xl">{svc.icon || "🛎"}</span>
+                <span className="text-xs font-semibold leading-tight" style={{ color: fg }}>
+                  {svc.translated_name || svc.name}
+                </span>
+              </button>
+            ))}
+
+            {/* 5-chi: Sharh kartasi (har doim ko'rinadi) */}
+            <button onClick={() => setShowReview(true)}
+              style={{ borderColor: `${primary}55`, backgroundColor: `${primary}10` }}
+              className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 text-center transition-all active:scale-[0.97] hover:shadow-md">
+              <span className="text-3xl">⭐</span>
+              <span className="text-xs font-semibold leading-tight" style={{ color: primary }}>
+                {t("reviewCard")}
+              </span>
+            </button>
           </div>
         </div>
-
-        {/* Sub-options */}
-        {selected && selected.sub_options?.length > 0 && (
-          <div className="animate-fade-in">
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={lbl}>
-              {t("selectSubOption")}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {selected.sub_options.map(opt => {
-                const name = opt.translated_name || opt.name;
-                const on = subOption === name;
-                return (
-                  <button key={opt._id}
-                    onClick={() => setSubOption(on ? "" : name)}
-                    style={on
-                      ? { backgroundColor: primary, borderColor: primary, color: "#fff" }
-                      : { backgroundColor: cardBg, borderColor: cardBorder, color: fg }}
-                    className="px-3.5 py-1.5 rounded-full text-sm border transition-all">
-                    {name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Izoh */}
-        {selected && (
-          <div className="animate-fade-in">
-            <label className="text-xs font-semibold uppercase tracking-wider mb-2 block" style={lbl}>
-              {t("addNote")}
-            </label>
-            <textarea rows={3} value={description}
-              onChange={e => { setDescription(e.target.value); setDescErr(""); }}
-              placeholder={t("notePlaceholder")}
-              style={{ backgroundColor: cardBg, color: fg, borderColor: descErr ? "#f87171" : cardBorder }}
-              className="input resize-none text-sm" />
-            {descErr && <p className="text-red-500 text-xs mt-1">{descErr}</p>}
-          </div>
-        )}
       </div>
 
-      {/* Bottom button */}
-      {selected && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 backdrop-blur border-t" style={{ backgroundColor: headerBg, borderColor: cardBorder }}>
-          <div className="max-w-lg mx-auto">
-            <button onClick={handleSubmit} className="btn-primary gap-2" style={{ backgroundColor: primary }}>
-              {t("send")} <ArrowRight size={16} />
-            </button>
+      {/* ───────── XIZMAT MODALI ───────── */}
+      {showService && selected && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" dir={getLangDir(lang)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setShowService(false)} />
+          <div className="relative w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] flex flex-col animate-slide-up"
+            style={{ backgroundColor: cardBg, color: fg }}>
+            {/* Sarlavha */}
+            <div className="flex items-center gap-3 px-5 pt-5 pb-3">
+              <span className="text-3xl">{selected.icon || "🛎"}</span>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-base truncate">{selected.translated_name || selected.name}</h3>
+                <p className="text-xs" style={{ color: subc }}>{t("room")} {room}</p>
+              </div>
+              <button onClick={() => setShowService(false)} className="p-2 rounded-full"
+                style={{ backgroundColor: `${primary}14`, color: primary }}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-5">
+              {selected.sub_options?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={lbl}>
+                    {t("selectSubOption")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selected.sub_options.map(opt => {
+                      const name = opt.translated_name || opt.name;
+                      const on = subOption === name;
+                      return (
+                        <button key={opt._id}
+                          onClick={() => setSubOption(on ? "" : name)}
+                          style={on
+                            ? { backgroundColor: primary, borderColor: primary, color: "#fff" }
+                            : { backgroundColor: pageBg, borderColor: cardBorder, color: fg }}
+                          className="px-3.5 py-1.5 rounded-full text-sm border transition-all">
+                          {name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider mb-2 block" style={lbl}>
+                  {t("addNote")}
+                </label>
+                <textarea rows={3} value={description}
+                  onChange={e => { setDescription(e.target.value); setDescErr(""); }}
+                  placeholder={t("notePlaceholder")}
+                  style={{ backgroundColor: pageBg, color: fg, borderColor: cardBorder }}
+                  className="input resize-none text-sm" />
+              </div>
+            </div>
+
+            <div className="px-5 py-4 border-t" style={{ borderColor: cardBorder }}>
+              <button onClick={handleSubmit} className="btn-primary gap-2 w-full" style={{ backgroundColor: primary }}>
+                {t("send")} <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ───────── SHARH MODALI ───────── */}
+      {showReview && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" dir={getLangDir(lang)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={closeReview} />
+          <div className="relative w-full sm:max-w-md sm:mx-4 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-slide-up"
+            style={{ backgroundColor: cardBg, color: fg }}>
+            {reviewDone ? (
+              <div className="px-6 py-12 text-center">
+                <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: `${primary}18` }}>
+                  <Check size={30} style={{ color: primary }} />
+                </div>
+                <h3 className="font-bold text-lg mb-1">{t("reviewThanks")}</h3>
+                <div className="flex justify-center gap-1.5 my-3">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <Star key={i} size={20}
+                      style={{ fill: i <= rating ? primary : "none", color: i <= rating ? primary : subc }} strokeWidth={1.5} />
+                  ))}
+                </div>
+                <button onClick={closeReview} className="mt-2 text-sm font-semibold" style={{ color: primary }}>
+                  {t("close")}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="px-5 pt-5 pb-3 flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primary}18` }}>
+                    <MessageSquareHeart size={20} style={{ color: primary }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-base">{t("reviewTitle")}</h3>
+                    <p className="text-xs mt-0.5" style={{ color: subc }}>{t("reviewHint")}</p>
+                  </div>
+                  <button onClick={closeReview} className="p-2 rounded-full" style={{ backgroundColor: `${primary}14`, color: primary }}>
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div className="px-5 pb-5 space-y-4">
+                  {/* Yulduzlar */}
+                  <div className="flex justify-center gap-2 py-2">
+                    {[1, 2, 3, 4, 5].map(i => {
+                      const active = i <= (hoverStar || rating);
+                      return (
+                        <button key={i}
+                          onMouseEnter={() => setHoverStar(i)} onMouseLeave={() => setHoverStar(0)}
+                          onClick={() => { setRating(i); setReviewErr(""); }}
+                          className="transition-transform active:scale-90 hover:scale-110">
+                          <Star size={36} strokeWidth={1.5}
+                            style={{ fill: active ? primary : "none", color: active ? primary : subc }} />
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <textarea rows={3} value={reviewComment}
+                    onChange={e => setReviewComment(e.target.value)}
+                    placeholder={t("reviewComment")}
+                    style={{ backgroundColor: pageBg, color: fg, borderColor: cardBorder }}
+                    className="input resize-none text-sm" />
+
+                  {reviewErr && <p className="text-red-500 text-xs text-center">{reviewErr}</p>}
+
+                  <button onClick={submitReview} disabled={reviewBusy}
+                    className="btn-primary gap-2 w-full disabled:opacity-60" style={{ backgroundColor: primary }}>
+                    {reviewBusy
+                      ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      : <Star size={16} />}
+                    {t("reviewSend")}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
