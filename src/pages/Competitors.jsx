@@ -21,6 +21,7 @@ import { hotelApi, searchApi, aiApi } from '@/lib/api';
 import { useT, useLang } from '@/lib/i18n';
 import { cn, useFormatPrice } from '@/lib/utils';
 import { getOtaBrand } from '@/lib/otaBrands';
+import { getCache, setCache, clearCache, clearCachePrefix } from '@/lib/clientCache';
 
 // ─── OTA display names ────────────────────────────────
 const OTA_DISPLAY = {
@@ -249,11 +250,18 @@ function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
   const [activeTab, setActiveTab] = useState('prices');
 
   const loadDetail = useCallback(() => {
-    setLoading(true);
+    const cacheKey = `compDetail:${comp._id}`;
+    const cached = getCache(cacheKey, 30 * 60_000); // 30 daqiqa
+    if (cached) {
+      setData(cached);
+      setLoading(false); // keshdan darrov ochiladi
+    } else {
+      setLoading(true);
+    }
     hotelApi
       .getCompetitorDetail(comp._id)
-      .then(setData)
-      .catch(() => setData(null))
+      .then((d) => { setData(d); setCache(cacheKey, d); })
+      .catch(() => { if (!cached) setData(null); })
       .finally(() => setLoading(false));
   }, [comp._id]);
 
@@ -636,17 +644,23 @@ export default function Competitors() {
   // force=true — "Yangilash" bosilganda AI'ga qayta so'rov (token sarflanadi).
   // force=false — keshdan oladi (token ketmaydi); kesh bo'lmasa bir marta generatsiya.
   const loadAi = useCallback(async (force = false) => {
+    const cacheKey = `ai:${hotel?._id}:${lang}`;
+    if (!force) {
+      const cached = getCache(cacheKey, 12 * 3600_000); // 12 soat
+      if (cached) { setAiData(cached); return; } // keshdan — so'rov yubormaymiz
+    }
     setAiLoading(true);
     setAiError('');
     try {
       const res = await aiApi.priceRecommendations(lang, force);
       setAiData(res);
+      setCache(cacheKey, res);
     } catch (err) {
       setAiError(err.response?.data?.error || err.message);
     } finally {
       setAiLoading(false);
     }
-  }, [lang]);
+  }, [lang, hotel?._id]);
   // Avto Xotelo-enrich har sahifa ochilishida bir martagina ishlasin (qayta navigatsiya zarariga yo'l qo'ymaslik).
   const xoteloAutoFetched = useRef(false);
 
@@ -656,13 +670,24 @@ export default function Competitors() {
   const myStars = hotel?.stars || 0;
   const [ownChannelPrices, setOwnChannelPrices] = useState({});
 
+  // Stale-while-revalidate: keshdan darrov ko'rsatamiz, orqa fonda yangilaymiz.
   const load = useCallback(() => {
-    setLoading(true);
+    const key = hotel?._id ? `competitors:${hotel._id}` : null;
+    const cached = key ? getCache(key, 6 * 3600_000) : null; // 6 soat
+    if (cached) {
+      setCompetitors(cached);
+      setLoading(false); // keshdan — spinner ko'rsatmaymiz
+    } else {
+      setLoading(true);
+    }
     hotelApi
       .competitors()
-      .then((c) => setCompetitors(c || []))
+      .then((c) => {
+        setCompetitors(c || []);
+        if (key) setCache(key, c || []);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [hotel?._id]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -678,6 +703,9 @@ export default function Competitors() {
   // (Booking, Agoda, Hotels.com …) — raqiblar kartasi bilan bir xil ko'rinishda.
   useEffect(() => {
     if (!hotel?._id) return;
+    const cacheKey = `otaChannels:${hotel._id}`;
+    const cached = getCache(cacheKey, 6 * 3600_000);
+    if (cached) setOwnChannelPrices(cached); // keshdan darrov
     hotelApi
       .otaChannels({ lite: true })
       .then((data) => {
@@ -688,6 +716,7 @@ export default function Competitors() {
           map[key] = ch.price;
         }
         setOwnChannelPrices(map);
+        setCache(cacheKey, map);
       })
       .catch(() => {});
   }, [hotel?._id]);
@@ -706,6 +735,7 @@ export default function Competitors() {
       });
       setPicked(null);
       setShowAdd(false);
+      clearCachePrefix('ai:'); // raqiblar to'plami o'zgardi — AI maslahatini eskirgan deb belgilaymiz
       load();
     } catch (err) {
       alert(err.response?.data?.error || 'Xato');
@@ -717,7 +747,13 @@ export default function Competitors() {
   const handleDelete = async (id) => {
     if (!confirm('O\'chirilsinmi?')) return;
     await hotelApi.deleteCompetitor(id);
-    setCompetitors((prev) => prev.filter((c) => c._id !== id));
+    setCompetitors((prev) => {
+      const next = prev.filter((c) => c._id !== id);
+      if (hotel?._id) setCache(`competitors:${hotel._id}`, next); // keshni ham yangilaymiz
+      return next;
+    });
+    clearCache(`compDetail:${id}`);
+    clearCachePrefix('ai:');
   };
 
   // Backend qaytargan otaPrices arrayini latestPrices key-value map'iga aylantiradi.

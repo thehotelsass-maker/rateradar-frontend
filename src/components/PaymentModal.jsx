@@ -156,41 +156,42 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
                 {t('choosePayMethod')}
               </div>
 
-              {/* ATMOS to'lov sahifasi — Visa/MC/UzCard/Humo */}
+              {/* Saytda karta + SMS-OTP — UzCard/Humo (asosiy, ishonchli oqim) */}
               <button
-                onClick={handlePayViaPage}
+                onClick={() => setStep('card')}
                 disabled={loading}
                 className="w-full text-left rounded-xl border border-primary/40 bg-primary/[0.04] hover:bg-primary/[0.08] transition-colors p-4 flex items-center gap-3 disabled:opacity-60"
               >
                 <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+                  <CreditCard className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{t('payViaPageTitle')}</span>
+                    <span className="text-sm font-medium">{t('payViaCardTitle')}</span>
                     <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold">
                       {t('recommended')}
                     </span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {loading ? t('redirectingToAtmos') : t('payViaPageDesc')}
-                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{t('payViaCardDesc')}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </button>
 
-              {/* Saytda karta + SMS-OTP — UzCard/Humo */}
+              {/* ATMOS to'lov sahifasi — Visa/MC/UzCard/Humo (ikkilamchi; checkout
+                  yoqilmagan store'da ishlamasligi mumkin) */}
               <button
-                onClick={() => setStep('card')}
+                onClick={handlePayViaPage}
                 disabled={loading}
                 className="w-full text-left rounded-xl border hover:bg-accent/40 transition-colors p-4 flex items-center gap-3 disabled:opacity-60"
               >
                 <div className="w-9 h-9 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
-                  <CreditCard className="h-4 w-4" />
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium">{t('payViaCardTitle')}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">{t('payViaCardDesc')}</div>
+                  <div className="text-sm font-medium">{t('payViaPageTitle')}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {loading ? t('redirectingToAtmos') : t('payViaPageDesc')}
+                  </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </button>
