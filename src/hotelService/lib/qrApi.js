@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Mustaqil Python QR-servis (default localhost:8000). Boshqa manzilga
 // o'tkazish uchun frontend .env'da VITE_QR_API ni belgilang.
-const QR_BASE = import.meta.env.VITE_QR_API || "http://localhost:8000";
+const QR_BASE = import.meta.env.VITE_QR_API || "https://qr.thehotelsaas.com";
 
 const qr = axios.create({ baseURL: QR_BASE, timeout: 30000 });
 
