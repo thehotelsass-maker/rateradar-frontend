@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { CollectModal } from './CollectModal';
 import { hotelApi } from '@/lib/api';
 import { pageTransition } from '@/lib/animations';
 import { cn, useSourceCurrency } from '@/lib/utils';
@@ -102,6 +103,8 @@ export function AppLayout() {
 
   return (
     <div className="h-screen flex bg-mesh overflow-hidden">
+      {/* Onboarding: ma'lumot yig'ilguncha bloklovchi modal */}
+      <CollectModal hotel={hotel} onReady={loadHotels} />
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden animate-fade-in"

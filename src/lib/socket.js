@@ -71,3 +71,20 @@ export function onPriceProgress(handler) {
   s.on('price:progress', handler);
   return () => s.off('price:progress', handler);
 }
+
+// Onboarding ma'lumot yig'ish jarayoni — bloklovchi modal shuni tinglaydi.
+// Payload: { hotelId, step, pct, label }
+export function onCollectProgress(handler) {
+  const s = getSocket();
+  if (!s) return () => {};
+  s.on('collect:progress', handler);
+  return () => s.off('collect:progress', handler);
+}
+
+// Yig'ish tugadi — modal yopilib, dashboard ochiladi. Payload: { hotelId }
+export function onDataReady(handler) {
+  const s = getSocket();
+  if (!s) return () => {};
+  s.on('data:ready', handler);
+  return () => s.off('data:ready', handler);
+}

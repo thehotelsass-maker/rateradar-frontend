@@ -66,6 +66,7 @@ export const searchApi = {
 export const hotelApi = {
   create: (data) => api.post("/hotels", data).then((r) => r.data.hotel),
   getMine: () => api.get("/hotels/me").then((r) => r.data.hotel),
+  collectStatus: () => api.get("/hotels/me/collect-status").then((r) => r.data),
   listAll: () => api.get("/hotels/mine/all").then((r) => r.data.hotels),
   update: (data) => api.put("/hotels/me", data).then((r) => r.data.hotel),
   enrich: () => api.post("/hotels/me/enrich").then((r) => r.data),
