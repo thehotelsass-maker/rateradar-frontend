@@ -116,73 +116,40 @@ const uz = {
     title: 'Ommaviy oferta (Litsenziya shartnomasi)',
     updated: "Oxirgi yangilangan sana: 02.07.2026",
     intro:
-      "Ushbu hujjat thehotelsaas.com (keyingi o'rinlarda — «Sayt» yoki «Tizim») operatori bo'lgan Lochin ekspres plyus MChJ (keyingi o'rinlarda — «Litsenziar») tomonidan yuridik shaxslar va yakka tartibdagi tadbirkorlarga (keyingi o'rinlarda — «Litsenziat» yoki «Foydalanuvchi») SaaS-platformadan foydalanish huquqini taqdim etish bo'yicha rasmiy taklif (Ommaviy oferta) hisoblanadi. O'zbekiston Respublikasi Fuqarolik kodeksining 369-moddasiga muvofiq, ushbu ofertada ko'rsatilgan shartlar qabul qilinishi (aksept) va Tizimda ro'yxatdan o'tilishi yoki obuna haqi to'lanishi shartnoma tuzilganligini anglatadi va u yuridik kuchga ega.",
+      "Ushbu hujjat Lochin ekspres plyus MChJ (keyingi o'rinlarda — «Litsenziar») tomonidan yuridik shaxslar va yakka tartibdagi tadbirkorlarga (keyingi o'rinlarda — «Litsenziat» yoki «Foydalanuvchi») thehotelsaas.com SaaS-platformasidan oddiy (noeksklyuziv) litsenziya shartlarida foydalanish huquqini berish to'g'risidagi Shartnomani tuzish bo'yicha rasmiy taklif (Ommaviy oferta) hisoblanadi. O'zbekiston Respublikasi Fuqarolik kodeksining 369-moddasiga muvofiq, ushbu oferta shartlarini to'liq va so'zsiz qabul qilish (aksept) — Foydalanuvchining Tizimda ro'yxatdan o'tishi yoki istalgan Tarif rejasi uchun to'lovni amalga oshirishi hisoblanadi.",
     sections: [
       {
-        h: "1. Atamalar va ta'riflar",
+        h: '1. Shartnoma predmeti',
+        p: "Litsenziar Litsenziatga thehotelsaas.com dasturiy majmuasiga (AI narx tahlili moduli, sharhlar agregatori va QR-buyurtma tizimini o'z ichiga oladi) internet orqali masofaviy kirish huquqini beradi, Litsenziat esa Tariflarga muvofiq obunani o'z vaqtida to'lash majburiyatini oladi.",
+      },
+      {
+        h: "2. To'lov va obuna shartlari",
         list: [
-          "SaaS-platforma (Tizim) — thehotelsaas.com manzilida joylashgan, mehmonxonalarni boshqarish (PMS, Channel Manager va b.) uchun mo'ljallangan bulutli dasturiy ta'minot.",
-          "Aksept — Foydalanuvchi tomonidan Oferta shartlarini to'liq va so'zsiz qabul qilinishi (ro'yxatdan o'tish yoki to'lov qilish orqali).",
-          "Litsenziat (Foydalanuvchi) — Tizimdan o'z tijorat faoliyatida foydalanuvchi mehmonxona, xostel yoki boshqa joylashtirish vositasi egasi (yuridik shaxs yoki YaTT).",
-          "Tarif rejasi (Obuna) — Tizim funksiyalaridan foydalanish muddati, narxi va hajmini belgilovchi shartlar to'plami.",
+          "2.1. Kirish tanlangan davr (oy/yil) uchun 100% oldindan to'lov (prepayment) asosida taqdim etiladi.",
+          "2.2. Shaxsiy kabinetda bank kartasi ulanganida avtomatik uzaytirish (Auto-Renewal) funksiyasi yoqiladi. Litsenziat uni istalgan vaqtda o'chirishi mumkin.",
+          "2.3. Obuna uchun to'langan mablag'lar qaytarilmaydi, chunki dasturiy ta'minotga kirish huquqi tranzaksiyadan so'ng darhol to'liq taqdim etilgan hisoblanadi.",
         ],
       },
       {
-        h: '2. Shartnoma predmeti',
+        h: "3. Mas'uliyatni cheklash (Disclaimer — Muhim!)",
         list: [
-          "2.1. Litsenziar Foydalanuvchiga Tizimdan (SaaS) internet orqali oddiy (noeksklyuziv) litsenziya shartlarida foydalanish huquqini beradi.",
-          "2.2. Foydalanuvchi tanlangan Tarif rejasiga muvofiq xizmatlar uchun haq to'lash va Tizimdan faqat qonuniy maqsadlarda foydalanish majburiyatini oladi.",
+          "3.1. Dasturiy ta'minot «Qanday bo'lsa, shunday» («As Is») tamoyili asosida taqdim etiladi. Litsenziar Tizim Foydalanuvchining barcha kutganlariga to'liq mos kelishiga kafolat bermaydi.",
+          "3.2. AI narx tavsiyalari: sun'iy intellektning narxlarni o'zgartirish bo'yicha barcha tahliliy ma'lumotlari va tavsiyalari faqat axborot tavsifiga ega. Litsenziar ushbu narxlarni qo'llash natijasida mehmonxona ko'rgan boy berilgan daromad, zarar yoki moliyaviy natijalar uchun javobgar emas.",
+          "3.3. AI tarjimalari va javoblari: QR-tizim orqali mehmonlar xabarlarini avtomatik tarjima qilish va sharhlarga javob generatsiyasi AI algoritmlari tomonidan bajariladi. Litsenziar tarjimadagi mazmuniy, kontekstual yoki grammatik xatolar hamda shu sabab mehmonxona va uning mehmonlari o'rtasida yuzaga kelishi mumkin bo'lgan nizolar uchun javobgar emas.",
+          "3.4. Overbuking va tashqi kanallar: Litsenziar tashqi kanallar (Booking.com, Expedia va b.) tomonidagi ma'lumot uzatishdagi kechikishlar (API kechikishi) va ular natijasida yuzaga kelgan overbuking (ikki marta bron) uchun javobgar emas.",
         ],
       },
       {
-        h: "3. Ro'yxatdan o'tish va aksept",
+        h: "4. Bloklash va ma'lumotlarni o'chirish",
         list: [
-          "3.1. Shartnoma Foydalanuvchi Saytda ro'yxatdan o'tgan (shaxsiy kabinet ochgan) yoki Tarif bo'yicha birinchi to'lovni amalga oshirgan paytdan boshlab kuchga kiradi.",
-          "3.2. Ro'yxatdan o'tish paytida Foydalanuvchi haqiqiy va to'g'ri ma'lumotlarni (mehmonxona nomi, STIR (INN), telefon, email) kiritishi shart.",
+          "4.1. Obunaning keyingi davri to'lanmagan taqdirda Tizimga kirish to'xtatiladi.",
+          "4.2. Litsenziar mehmonxona ma'lumotlar bazasini (mehmonlar ma'lumotlari, buyurtmalar tarixi) to'langan davr tugagan paytdan boshlab 30 kalendar kun davomida saqlash majburiyatini oladi. Ushbu muddat o'tgach, obuna uzaytirilmasa, Litsenziar barcha ma'lumotlarni serverlardan qaytarib bo'lmaydigan tarzda o'chirish huquqiga ega.",
         ],
       },
       {
-        h: "4. To'lov shartlari va avtomatik yangilanish (Auto-Renewal)",
+        h: '5. Litsenziar rekvizitlari',
         list: [
-          "4.1. Tizimdan foydalanish narxi va tariflari Saytning «Tariflar» sahifasida ko'rsatilgan. Litsenziar tariflarni bir tomonlama o'zgartirish huquqiga ega (bu haqda 10 kun oldin xabar beriladi).",
-          "4.2. To'lovlar 100% oldindan to'lov (prepayment) tizimida amalga oshiriladi.",
-          "4.3. Avtomatik obuna: Foydalanuvchi bank kartasini ulaganida, keyingi davr (oy/yil) uchun to'lov obuna muddati tugashidan oldin kartadan avtomatik yechib olinishiga rozilik beradi. Foydalanuvchi obunani istalgan vaqtda shaxsiy kabinetida bekor qilishi mumkin.",
-          "4.4. To'langan mablag'lar qaytarilmaydi, chunki dasturiy ta'minotga kirish huquqi to'lov qilingan zahoti to'liq taqdim etilgan hisoblanadi.",
-        ],
-      },
-      {
-        h: '5. Tomonlarning huquq va majburiyatlari',
-        list: [
-          "5.1. Litsenziar majburiyatlari: Tizimning uzluksiz ishlashini ta'minlash (texnik cheklovlar doirasida, ~99% uptime); Foydalanuvchi ma'lumotlarining xavfsizligi va maxfiyligini saqlash.",
-          "5.2. Foydalanuvchi majburiyatlari: shaxsiy kabinet parollarini uchinchi shaxslarga bermaslik; Tizimni buzishga, nusxalashga yoki uning kodini o'g'irlashga urinmaslik.",
-        ],
-      },
-      {
-        h: "6. Mas'uliyatni cheklash (Disclaimer)",
-        list: [
-          "6.1. Tizim «Qanday bo'lsa, shunday» («As Is») tamoyili asosida taqdim etiladi. Litsenziar Tizim Foydalanuvchining barcha kutganlariga mos kelishiga kafolat bermaydi.",
-          "6.2. Litsenziar internet uzilishlari, xakerlik hujumlari, elektr energiyasi o'chishi yoki uchinchi tomon xizmatlari (masalan, Booking.com, Expedia API uzilishlari) tufayli yuzaga kelgan ma'lumotlar yo'qolishi yoki boy berilgan foyda uchun javobgar emas.",
-          "6.3. Litsenziarning umumiy moliyaviy javobgarligi Foydalanuvchi tomonidan oxirgi 1 (bir) oy davomida to'langan obuna miqdoridan oshib ketishi mumkin emas.",
-        ],
-      },
-      {
-        h: "7. Maxfiylik va shaxsiy ma'lumotlar xavfsizligi",
-        list: [
-          "7.1. Litsenziat Tizimga kiritadigan mehmonlar (mijozlar) ma'lumotlari O'zbekiston Respublikasining «Shaxsiy ma'lumotlar to'g'risida»gi Qonuniga muvofiq himoya qilinadi.",
-          "7.2. Litsenziar Foydalanuvchining ruxsatisiz uning ma'lumotlarini uchinchi tomonlarga sotmaydi va oshkor qilmaydi (qonunchilikda belgilangan holatlar mustasno).",
-        ],
-      },
-      {
-        h: '8. Fors-major va nizolarni hal etish',
-        list: [
-          "8.1. Tomonlar yengib bo'lmas kuchlar (tabiiy ofatlar, urush, davlat taqiqlari, global internet uzilishlari) vaqtida majburiyatlardan ozod qilinadilar.",
-          "8.2. Ushbu Shartnoma yuzasidan kelib chiqadigan barcha nizolar muzokaralar yo'li bilan, kelishuv bo'lmaganda esa Buxoro viloyati iqtisodiy sudi orqali hal qilinadi.",
-        ],
-      },
-      {
-        h: "9. Rekvizitlar (Litsenziar ma'lumotlari)",
-        list: [
-          "Tashkilot nomi: Lochin ekspres plyus MChJ",
+          "Nomi: Lochin ekspres plyus MChJ",
           "Manzil: Buxoro shahri, Islom Karimov ko'chasi, 21-uy",
           "Email: info@thehotelsaas.com",
         ],
@@ -294,73 +261,40 @@ const ru = {
     title: 'Публичная оферта (Лицензионный договор)',
     updated: 'Последнее обновление: 02.07.2026',
     intro:
-      'Настоящий документ является официальным предложением (Публичной офертой) оператора сайта thehotelsaas.com (далее — «Сайт» или «Система») — Lochin ekspres plyus MChJ (далее — «Лицензиар») — юридическим лицам и индивидуальным предпринимателям (далее — «Лицензиат» или «Пользователь») о предоставлении права пользования SaaS-платформой. В соответствии со статьёй 369 Гражданского кодекса Республики Узбекистан, принятие (акцепт) указанных в оферте условий и регистрация в Системе либо оплата подписки означают заключение договора, имеющего юридическую силу.',
+      'Настоящий документ представляет собой официальное предложение (Публичную оферту) компании Lochin ekspres plyus MChJ (далее — «Лицензиар») для юридических лиц и индивидуальных предпринимателей (далее — «Лицензиат» или «Пользователь») заключить Договор о предоставлении права использования SaaS-платформы thehotelsaas.com на условиях простой (неисключительной) лицензии. В соответствии со ст. 369 Гражданского кодекса Республики Узбекистан, полным и безоговорочным принятием (акцептом) условий настоящей оферты является регистрация Пользователя в Системе или осуществление оплаты за любой Тарифный план.',
     sections: [
       {
-        h: '1. Термины и определения',
+        h: '1. Предмет соглашения',
+        p: 'Лицензиар предоставляет Лицензиату удалённый доступ к программному комплексу thehotelsaas.com (включая AI-модуль анализа цен, агрегатор отзывов и систему QR-заказов) через интернет, а Лицензиат обязуется своевременно оплачивать подписку согласно Тарифам.',
+      },
+      {
+        h: '2. Условия оплаты и подписки',
         list: [
-          'SaaS-платформа (Система) — облачное программное обеспечение по адресу thehotelsaas.com, предназначенное для управления отелями (PMS, Channel Manager и др.).',
-          'Акцепт — полное и безоговорочное принятие Пользователем условий Оферты (через регистрацию или оплату).',
-          'Лицензиат (Пользователь) — владелец отеля, хостела или иного средства размещения, использующий Систему в коммерческой деятельности (юридическое лицо или ИП).',
-          'Тарифный план (Подписка) — набор условий, определяющих срок, стоимость и объём использования функций Системы.',
+          '2.1. Доступ предоставляется на условиях 100% предоплаты за выбранный период (месяц/год).',
+          '2.2. При привязке банковской карты в Личном кабинете включается функция автоматического продления (Auto-renewal). Лицензиат может отключить её в любой момент.',
+          '2.3. Оплаченные за подписку денежные средства возврату не подлежат, так как доступ к программному обеспечению считается предоставленным в полном объёме сразу после транзакции.',
         ],
       },
       {
-        h: '2. Предмет договора',
+        h: '3. Ограничение ответственности (Disclaimer — Важно!)',
         list: [
-          '2.1. Лицензиар предоставляет Пользователю право пользования Системой (SaaS) через интернет на условиях простой (неисключительной) лицензии.',
-          '2.2. Пользователь обязуется оплачивать услуги согласно выбранному Тарифному плану и использовать Систему только в законных целях.',
+          '3.1. Программное обеспечение предоставляется по принципу «Как есть» («As Is»). Лицензиар не гарантирует, что Система будет полностью соответствовать ожиданиям Пользователя.',
+          '3.2. AI-рекомендации по ценам: все аналитические данные и рекомендации ИИ по изменению цен носят исключительно информационный характер. Лицензиар не несёт ответственности за любые упущенные доходы, убытки или финансовые результаты, полученные отелем в ходе применения этих цен.',
+          '3.3. AI-переводы и ответы: автоматический перевод сообщений гостей через QR-систему и генерация ответов на отзывы выполняются алгоритмами ИИ. Лицензиар не отвечает за возможные смысловые, контекстные или грамматические ошибки в переводах и потенциальные споры между отелем и его гостями из-за этих ошибок.',
+          '3.4. Овербукинг и внешние каналы: Лицензиар не несёт ответственности за задержки в передаче данных (API) со стороны внешних каналов (Booking.com, Expedia и др.) и возникшие вследствие этого овербукинги (двойные бронирования).',
         ],
       },
       {
-        h: '3. Регистрация и акцепт',
+        h: '4. Блокировка и удаление данных',
         list: [
-          '3.1. Договор вступает в силу с момента регистрации Пользователя на Сайте (создания личного кабинета) либо совершения первой оплаты по Тарифу.',
-          '3.2. При регистрации Пользователь обязан указывать достоверные и точные данные (название отеля, ИНН (STIR), телефон, email).',
+          '4.1. В случае неоплаты следующего периода подписки доступ к Системе приостанавливается.',
+          '4.2. Лицензиар обязуется хранить базу данных отеля (данные гостей, историю заказов) в течение 30 календарных дней с момента окончания оплаченного периода. По истечении этого срока, если подписка не продлена, Лицензиар имеет право безвозвратно удалить все данные с серверов.',
         ],
       },
       {
-        h: '4. Условия оплаты и автопродление (Auto-Renewal)',
+        h: '5. Реквизиты Лицензиара',
         list: [
-          '4.1. Стоимость и тарифы указаны на странице «Тарифы» Сайта. Лицензиар вправе в одностороннем порядке изменять тарифы (с уведомлением за 10 дней).',
-          '4.2. Оплата производится на условиях 100% предоплаты (prepayment).',
-          '4.3. Автоподписка: при привязке банковской карты Пользователь соглашается на автоматическое списание оплаты за следующий период (месяц/год) до окончания срока подписки. Пользователь может отменить подписку в любое время в личном кабинете.',
-          '4.4. Уплаченные средства не возвращаются, так как право доступа к ПО считается предоставленным в полном объёме сразу после оплаты.',
-        ],
-      },
-      {
-        h: '5. Права и обязанности сторон',
-        list: [
-          '5.1. Обязанности Лицензиара: обеспечивать непрерывную работу Системы (в рамках технических ограничений, ~99% uptime); сохранять безопасность и конфиденциальность данных Пользователя.',
-          '5.2. Обязанности Пользователя: не передавать пароли личного кабинета третьим лицам; не пытаться взломать, скопировать Систему или похитить её код.',
-        ],
-      },
-      {
-        h: '6. Ограничение ответственности (Disclaimer)',
-        list: [
-          '6.1. Система предоставляется по принципу «как есть» («As Is»). Лицензиар не гарантирует полное соответствие Системы всем ожиданиям Пользователя.',
-          '6.2. Лицензиар не несёт ответственности за потерю данных или упущенную выгоду вследствие сбоев интернета, хакерских атак, отключения электроэнергии или сбоев сторонних сервисов (например, API Booking.com, Expedia).',
-          '6.3. Общая финансовая ответственность Лицензиара не может превышать сумму подписки, уплаченную Пользователем за последний 1 (один) месяц.',
-        ],
-      },
-      {
-        h: '7. Конфиденциальность и защита персональных данных',
-        list: [
-          '7.1. Данные гостей (клиентов), вносимые Лицензиатом в Систему, защищаются в соответствии с Законом Республики Узбекистан «О персональных данных».',
-          '7.2. Лицензиар не продаёт и не раскрывает данные Пользователя третьим лицам без его согласия (за исключением случаев, предусмотренных законодательством).',
-        ],
-      },
-      {
-        h: '8. Форс-мажор и разрешение споров',
-        list: [
-          '8.1. Стороны освобождаются от обязательств во время обстоятельств непреодолимой силы (стихийные бедствия, война, государственные запреты, глобальные сбои интернета).',
-          '8.2. Все споры по настоящему Договору разрешаются путём переговоров, а при недостижении согласия — через Экономический суд Бухарской области.',
-        ],
-      },
-      {
-        h: '9. Реквизиты (данные Лицензиара)',
-        list: [
-          'Наименование организации: Lochin ekspres plyus MChJ',
+          'Наименование: Lochin ekspres plyus MChJ',
           'Адрес: г. Бухара, ул. Ислама Каримова, дом 21',
           'Email: info@thehotelsaas.com',
         ],
@@ -472,73 +406,40 @@ const en = {
     title: 'Public Offer (License Agreement)',
     updated: 'Last updated: 02.07.2026',
     intro:
-      'This document is an official offer (Public Offer) by the operator of thehotelsaas.com (hereinafter — the "Site" or "System") — Lochin ekspres plyus MChJ (hereinafter — the "Licensor") — to legal entities and sole proprietors (hereinafter — the "Licensee" or "User") to grant the right to use the SaaS platform. Under Article 369 of the Civil Code of the Republic of Uzbekistan, acceptance of the terms set out in this offer together with registration in the System or payment of the subscription constitutes a legally binding agreement.',
+      'This document is an official offer (Public Offer) by Lochin ekspres plyus MChJ (hereinafter — the "Licensor") to legal entities and sole proprietors (hereinafter — the "Licensee" or "User") to conclude an Agreement granting the right to use the SaaS platform thehotelsaas.com under a simple (non-exclusive) license. Under Article 369 of the Civil Code of the Republic of Uzbekistan, full and unconditional acceptance of these offer terms is the User\'s registration in the System or payment for any Pricing plan.',
     sections: [
       {
-        h: '1. Terms and definitions',
+        h: '1. Subject of the agreement',
+        p: 'The Licensor grants the Licensee remote access, via the internet, to the thehotelsaas.com software suite (including the AI price analysis module, review aggregator and QR-order system), and the Licensee undertakes to pay the subscription on time according to the Tariffs.',
+      },
+      {
+        h: '2. Payment and subscription terms',
         list: [
-          'SaaS platform (System) — cloud software at thehotelsaas.com designed for hotel management (PMS, Channel Manager, etc.).',
-          'Acceptance — the User\'s full and unconditional acceptance of the Offer terms (via registration or payment).',
-          'Licensee (User) — the owner of a hotel, hostel or other accommodation using the System in commercial activity (legal entity or sole proprietor).',
-          'Pricing plan (Subscription) — the set of terms defining the duration, price and scope of use of the System\'s features.',
+          '2.1. Access is granted on a 100% prepayment basis for the selected period (month/year).',
+          '2.2. When a bank card is linked in the account, the automatic renewal (Auto-renewal) function is enabled. The Licensee may disable it at any time.',
+          '2.3. Funds paid for a subscription are non-refundable, as access to the software is deemed fully provided immediately after the transaction.',
         ],
       },
       {
-        h: '2. Subject of the agreement',
+        h: '3. Limitation of liability (Disclaimer — Important!)',
         list: [
-          '2.1. The Licensor grants the User the right to use the System (SaaS) over the internet under a simple (non-exclusive) license.',
-          '2.2. The User undertakes to pay for the services according to the selected Pricing plan and to use the System for lawful purposes only.',
+          '3.1. The software is provided "as is". The Licensor does not guarantee that the System will fully meet the User\'s expectations.',
+          '3.2. AI price recommendations: all AI analytics and price-change recommendations are for informational purposes only. The Licensor is not liable for any lost income, losses or financial results incurred by the hotel from applying these prices.',
+          '3.3. AI translations and replies: automatic translation of guest messages via the QR system and generation of review replies are performed by AI algorithms. The Licensor is not liable for possible semantic, contextual or grammatical errors in translations, nor for potential disputes between the hotel and its guests arising from such errors.',
+          '3.4. Overbooking and external channels: the Licensor is not liable for delays in data transfer (API) from external channels (Booking.com, Expedia, etc.) and any resulting overbookings (double bookings).',
         ],
       },
       {
-        h: '3. Registration and acceptance',
+        h: '4. Suspension and deletion of data',
         list: [
-          '3.1. The agreement takes effect from the moment the User registers on the Site (creates an account) or makes the first payment under the Tariff.',
-          '3.2. When registering, the User must provide accurate and correct data (hotel name, TIN (INN), phone, email).',
+          '4.1. If the next subscription period is not paid, access to the System is suspended.',
+          '4.2. The Licensor undertakes to store the hotel database (guest data, order history) for 30 calendar days from the end of the paid period. After this period, if the subscription is not renewed, the Licensor has the right to permanently delete all data from the servers.',
         ],
       },
       {
-        h: '4. Payment terms and auto-renewal',
+        h: '5. Licensor requisites',
         list: [
-          '4.1. Prices and tariffs are listed on the "Pricing" page of the Site. The Licensor may unilaterally change tariffs (with 10 days\' notice).',
-          '4.2. Payments are made on a 100% prepayment basis.',
-          '4.3. Auto-renewal: by linking a bank card, the User consents to automatic charging for the next period (month/year) before the subscription expires. The User may cancel the subscription at any time in their account.',
-          '4.4. Paid funds are non-refundable, as the right to access the software is deemed fully granted immediately upon payment.',
-        ],
-      },
-      {
-        h: '5. Rights and obligations of the parties',
-        list: [
-          '5.1. Licensor obligations: ensure continuous operation of the System (within technical limits, ~99% uptime); maintain the security and confidentiality of User data.',
-          '5.2. User obligations: not to share account passwords with third parties; not to attempt to hack, copy the System or steal its code.',
-        ],
-      },
-      {
-        h: '6. Limitation of liability (Disclaimer)',
-        list: [
-          '6.1. The System is provided "as is". The Licensor does not guarantee that the System will meet all of the User\'s expectations.',
-          '6.2. The Licensor is not liable for data loss or lost profit due to internet outages, hacker attacks, power failures or third-party service failures (e.g. Booking.com, Expedia API outages).',
-          '6.3. The Licensor\'s total financial liability may not exceed the subscription amount paid by the User for the last 1 (one) month.',
-        ],
-      },
-      {
-        h: '7. Privacy and personal data security',
-        list: [
-          '7.1. Guest (customer) data entered by the Licensee into the System is protected in accordance with the Law of the Republic of Uzbekistan "On Personal Data".',
-          '7.2. The Licensor does not sell or disclose the User\'s data to third parties without consent (except as required by law).',
-        ],
-      },
-      {
-        h: '8. Force majeure and dispute resolution',
-        list: [
-          '8.1. The parties are released from obligations during force majeure events (natural disasters, war, government bans, global internet outages).',
-          '8.2. All disputes under this Agreement are resolved through negotiation, and failing agreement — through the Economic Court of the Bukhara Region.',
-        ],
-      },
-      {
-        h: '9. Requisites (Licensor details)',
-        list: [
-          'Organization name: Lochin ekspres plyus MChJ',
+          'Name: Lochin ekspres plyus MChJ',
           'Address: Bukhara city, Islom Karimov street, house 21',
           'Email: info@thehotelsaas.com',
         ],
