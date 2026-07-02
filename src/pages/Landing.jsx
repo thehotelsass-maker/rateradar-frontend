@@ -22,13 +22,13 @@ import {
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { PublicNavbar } from '@/components/PublicNavbar';
+import { PublicFooter } from '@/components/layout/PublicFooter';
 import { SupportChat } from '@/components/SupportChat';
 import { PaymentModal } from '@/components/PaymentModal';
 import { Reveal, Stagger, StaggerItem } from '@/components/ui/motion';
 import CountUp from '@/components/ui/CountUp';
 import { useT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
-import { Logo } from '@/components/Logo';
 
 // Bo'lim ustidagi kichik yorliq (premium SaaS uslubi — limon nuqta bilan)
 function Eyebrow({ children }) {
@@ -595,91 +595,7 @@ export default function Landing() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t bg-muted/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <Reveal as="div" className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="col-span-2 md:col-span-1">
-              <Logo />
-              <p className="mt-4 text-xs text-muted-foreground max-w-xs leading-relaxed">
-                {t('landingTagline')}
-              </p>
-              <div className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-lime-400" />
-                </span>
-                {t('statMonitor')}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                {t('footerProduct')}
-              </div>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
-                    {t('navFeatures')}
-                  </a>
-                </li>
-                <li>
-                  <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
-                    {t('navPricing')}
-                  </a>
-                </li>
-                <li>
-                  <Link to="/login" className="text-muted-foreground hover:text-foreground transition-colors">
-                    {t('login')}
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                {t('footerCompany')}
-              </div>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                    {t('footerAbout')}
-                  </a>
-                </li>
-                <li>
-                  <a className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                    {t('footerContact')}
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                {t('footerLegal')}
-              </div>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                    {t('footerTerms')}
-                  </a>
-                </li>
-                <li>
-                  <a className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                    {t('footerPrivacy')}
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </Reveal>
-
-          <div className="mt-10 pt-6 border-t text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>© 2026 TheHotelSaaS. {t('footerRights')}.</span>
-            <span className="flex items-center gap-1.5">
-              UzCard · Humo · Visa · Mastercard
-            </span>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
       <SupportChat />
     </div>
   );

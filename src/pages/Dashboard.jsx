@@ -26,6 +26,7 @@ import { Stagger, StaggerItem, Reveal } from '@/components/ui/motion';
 import PriceRefreshProgress from '@/components/PriceRefreshProgress';
 import InstantSnapshotCard from '@/components/InstantSnapshotCard';
 import AiAdvisor from '@/components/AiAdvisor';
+import CategoryRatingsCard from '@/components/CategoryRatingsCard';
 import { hotelApi, pricesApi } from '@/lib/api';
 import { useT, useLang } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
@@ -481,6 +482,10 @@ export default function Dashboard() {
         </Card>
 
       </div>
+
+      {/* Booking.com kategoriya reytinglari (Tozalik, Joylashuv, Xizmat...) —
+          HasData yoki jonli skreyper orqali. */}
+      <CategoryRatingsCard hotelId={hotel?._id} />
 
       {/* AI Maslahatchi — narx/statistikaga qarab tavsiyalar (xizmat qo'shish,
           hotel-service'ga ulanish va h.k.). Competitors sahifasi bilan bir xil

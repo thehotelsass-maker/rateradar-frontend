@@ -277,6 +277,7 @@ export default function Prices() {
   const [days, setDays] = useState(7);
   const [channel, setChannel] = useState('all');
   const [roomData, setRoomData] = useState(null);
+  const [roomChannel, setRoomChannel] = useState('booking');
   const [compData, setCompData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -346,13 +347,13 @@ export default function Prices() {
   }
 
   // Stale-while-revalidate: keshdan darrov ko'rsatamiz, orqa fonda yangilaymiz.
-  async function loadRooms(d = days) {
-    const key = hotel?._id ? `priceRooms:${hotel._id}:${d}` : null;
+  async function loadRooms(d = days, provider = roomChannel) {
+    const key = hotel?._id ? `priceRooms:${hotel._id}:${d}:${provider}` : null;
     const cached = key ? getCache(key, 6 * 3600_000) : null; // 6 soat
     if (cached) { setRoomData(cached); setLoading(false); } else { setLoading(true); }
     setError('');
     try {
-      const res = await pricesApi.roomShopper(d);
+      const res = await pricesApi.roomShopper(d, provider);
       setRoomData(res);
       if (key) setCache(key, res);
     } catch (err) {
@@ -379,15 +380,15 @@ export default function Prices() {
   }
 
   function reload() {
-    if (view === 'rooms') loadRooms(days);
+    if (view === 'rooms') loadRooms(days, roomChannel);
     else loadCompetitors(days, channel);
   }
 
   useEffect(() => {
-    if (view === 'rooms') loadRooms(days);
+    if (view === 'rooms') loadRooms(days, roomChannel);
     else loadCompetitors(days, channel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, days, channel]);
+  }, [view, days, channel, roomChannel]);
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -401,7 +402,7 @@ export default function Prices() {
           <p className="text-sm text-muted-foreground mt-1">{t('rateShopperDesc')}</p>
         </div>
         <div className="flex items-center gap-2">
-          {view === 'rooms' && (
+          {view === 'rooms' && roomChannel === 'booking' && (
             <Button
               size="sm"
               onClick={refreshRooms}
@@ -511,6 +512,31 @@ export default function Prices() {
                 {(compData?.availableChannels || []).map((source) => (
                   <option key={source} value={source}>{source}</option>
                 ))}
+              </select>
+            </div>
+          )}
+
+          {/* Xona ko'rinishi — kanal tanlash (Booking xona turlari; boshqalar — hotel narxi) */}
+          {view === 'rooms' && (
+            <div className="inline-flex items-center gap-2">
+              <span className={cn(
+                'w-5 h-5 rounded-full text-white text-[10px] font-semibold flex items-center justify-center',
+                getOtaBrand(roomChannel).gradient
+              )}>
+                {getOtaBrand(roomChannel).short}
+              </span>
+              <select
+                value={roomChannel}
+                onChange={(e) => setRoomChannel(e.target.value)}
+                className="h-8 pl-2.5 pr-7 rounded-md border bg-card text-xs font-medium text-foreground hover:border-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
+              >
+                <option value="booking">Booking.com</option>
+                <option value="agoda">Agoda</option>
+                <option value="expedia">Expedia</option>
+                <option value="hotelscom">Hotels.com</option>
+                <option value="tripcom">Trip.com</option>
+                <option value="priceline">Priceline</option>
+                <option value="ostrovok">Ostrovok</option>
               </select>
             </div>
           )}

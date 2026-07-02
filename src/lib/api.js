@@ -219,8 +219,8 @@ export const pricesApi = {
     api
       .get("/prices/rate-shopper", { params: { days, channel } })
       .then((r) => r.data),
-  roomShopper: (days = 7) =>
-    api.get("/prices/room-shopper", { params: { days } }).then((r) => r.data),
+  roomShopper: (days = 7, provider = "booking") =>
+    api.get("/prices/room-shopper", { params: { days, provider } }).then((r) => r.data),
   refreshRooms: () =>
     api
       .post("/prices/refresh-rooms", null, { timeout: 5 * 60 * 1000 })
