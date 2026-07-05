@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import {
   TrendingUp,
@@ -122,6 +122,24 @@ export default function Dashboard() {
       setRefreshing(false);
     }
   }
+
+  // ── D9: Hotelga kirganda AVTOMATIK narx yangilash (agar eskirgan bo'lsa) ──
+  // "Kirganda darrov barcha kanal ishga tushsin" — lekin HAR kirganda emas
+  // (SerpAPI/proxy pulini yoqmaslik uchun). Faqat oxirgi yangilanish 6 soatdan
+  // eski bo'lsa yoki hech yangilanmagan bo'lsa. Modal o'zi ochiladi (jonli oqim).
+  const AUTO_REFRESH_STALE_MS = 6 * 3600_000; // 6 soat
+  const autoRefreshedRef = useRef(null);
+  useEffect(() => {
+    if (!hotel?._id || refreshing) return;
+    // Har hotel uchun bu sessiyada faqat bir marta avto-trigger (qayta render'da emas).
+    if (autoRefreshedRef.current === hotel._id) return;
+    const last = hotel.lastPriceRefreshedAt ? new Date(hotel.lastPriceRefreshedAt).getTime() : 0;
+    const stale = !last || Date.now() - last > AUTO_REFRESH_STALE_MS;
+    if (!stale) return;
+    autoRefreshedRef.current = hotel._id; // takror ishga tushmasin
+    refreshAllFromSerpApi();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hotel?._id, hotel?.lastPriceRefreshedAt]);
 
   // Real Booking.com narxlari: competitor.latestPrices.bookingcom (Apify cron + refresh).
   // Narx yo'q raqiblar hisob-kitobdan o'tkazib yuboriladi (mock yo'q).
