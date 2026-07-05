@@ -80,7 +80,7 @@ export default function AiAdvisor({ hotel, autoLoad = true }) {
               {L('AI Maslahatchi', 'AI Советник', 'AI Advisor')}
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {L('Narx va statistikaga qarab tavsiyalar', 'Рекомендации по ценам и статистике', 'Recommendations based on pricing & stats')}
+              {L('Narx, raqiblar, reyting, sharh va kanallarga qarab tavsiyalar', 'Рекомендации по ценам, конкурентам, рейтингу, отзывам и каналам', 'Advice from prices, competitors, ratings, reviews & channels')}
             </div>
           </div>
         </div>
