@@ -174,7 +174,7 @@ export default function Dashboard() {
   const hasRealPrices = competitorPrices.length > 0;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       {/* "Aha moment" — bepul Xotelo narx tahlili (avtomatik) */}
       <InstantSnapshotCard />
 
@@ -351,8 +351,10 @@ export default function Dashboard() {
         </StaggerItem>
       </Stagger>
 
-      {/* 14 kunlik narx prognozi grafigi */}
-      <Card variant="glass" className="overflow-hidden">
+      {/* Narx prognozi + eng arzon/qimmat raqib — yonma-yon (ixcham, premium) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* 14 kunlik narx prognozi grafigi — 2/3 */}
+      <Card variant="glass" className="overflow-hidden lg:col-span-2">
         <CardHeader className="flex flex-row items-start justify-between space-y-0">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
@@ -374,7 +376,7 @@ export default function Dashboard() {
               {t('loading')}
             </div>
           ) : (
-            <div className="h-72">
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: -8 }}>
                   <defs>
@@ -444,9 +446,8 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Two-column section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Cheapest / Expensive */}
+      {/* Eng arzon / eng qimmat raqib — grafik yonidagi o'ng ustun */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
         <Card variant="glass" className="hover-lift">
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
@@ -498,7 +499,7 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
-
+      </div>
       </div>
 
       {/* Booking.com kategoriya reytinglari (Tozalik, Joylashuv, Xizmat...) —
@@ -517,8 +518,8 @@ export default function Dashboard() {
 function StatCard({ icon: Icon, label, value, count, format, sub, delta, accent }) {
   return (
     <Card variant="glass" className="hover-lift h-full">
-      <CardContent className="pt-5">
-        <div className="flex items-center justify-between mb-2">
+      <CardContent className="pt-4">
+        <div className="flex items-center justify-between mb-1.5">
           <motion.div
             whileHover={{ rotate: -8, scale: 1.08 }}
             transition={{ type: 'spring', stiffness: 400, damping: 15 }}
