@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Check, Loader2, Sparkles, CreditCard, Info, CheckCircle2, Lock } from 'lucide-react';
+import {
+  Check, Loader2, Sparkles, CreditCard, Info, CheckCircle2, Lock, LifeBuoy, Send, Mail,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PaymentModal } from '@/components/PaymentModal';
@@ -14,8 +16,9 @@ const PLAN_FEATURES = {
   free: ['planFreeFeat1', 'planFreeFeat2', 'planFreeFeat3', 'planFreeFeat4'],
   starter: ['planStarterFeat1', 'planStarterFeat2', 'planStarterFeat3', 'planStarterFeat4'],
   pro: ['planProFeat1', 'planProFeat2', 'planProFeat3', 'planProFeat4'],
+  pro_yearly: ['planProFeat1', 'planProFeat2', 'planProFeat3', 'planProFeat4'],
 };
-const PLAN_TITLE = { free: 'planFreeTitle', starter: 'planStarterTitle', pro: 'planProTitle' };
+const PLAN_TITLE = { free: 'planFreeTitle', starter: 'planStarterTitle', pro: 'planProTitle', pro_yearly: 'planProTitle' };
 
 export default function Billing() {
   const t = useT();
@@ -66,11 +69,11 @@ export default function Billing() {
   const planActive = isPlanActive(user);
   const paywall = searchParams.get('paywall') === '1' || !planActive;
 
-  // Hozircha bitta sotib olinadigan reja (pro — $49 / 590 000 so'm).
-  // Backend eski versiya bo'lib bir nechta reja qaytarsa ham faqat pro ko'rsatiladi.
-  const paidPlans = data?.plans || [];
-  const proOnly = paidPlans.find((p) => p.id === 'pro') || paidPlans[0];
-  const cards = proOnly ? [proOnly] : [];
+  // Sotib olinadigan rejalar: oylik (pro) + yillik (pro_yearly, 2 oy bepul).
+  // Eski backend starter qaytarsa — u ko'rsatilmaydi.
+  const allPlans = data?.plans || [];
+  const paidPlans = allPlans.filter((p) => p.id === 'pro' || p.id === 'pro_yearly');
+  const cards = paidPlans.length ? paidPlans : allPlans.slice(0, 1);
 
   return (
     <div className="space-y-6 animate-fade-in max-w-4xl">
@@ -124,26 +127,39 @@ export default function Billing() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 max-w-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
           {cards.map((p) => {
-            const isCurrent = p.id === currentPlan && planActive;
+            const yearly = (p.durationDays || 30) >= 365;
+            const period = yearly ? t('perYear') : t('perMonth');
+            const isCurrent = !yearly && p.id === currentPlan && planActive;
             return (
               <div
                 key={p.id}
-                className="relative rounded-xl border border-primary shadow-lg shadow-primary/10 p-6 flex flex-col bg-card"
+                className={`relative rounded-xl border p-6 flex flex-col bg-card ${
+                  yearly
+                    ? 'border-primary shadow-lg shadow-primary/10'
+                    : 'border-primary/40'
+                }`}
               >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-medium">
-                  {p.name}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                  <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-medium whitespace-nowrap">
+                    {p.name}
+                  </span>
+                  {yearly && (
+                    <span className="px-2 py-1 rounded-full bg-green-500 text-white text-[10px] font-semibold whitespace-nowrap">
+                      {t('yearlySaveBadge')}
+                    </span>
+                  )}
                 </div>
 
                 <div className="mt-2 flex items-baseline gap-1.5">
                   <span className="text-3xl font-semibold tracking-tight">
                     ${p.priceUsd || 49}
                   </span>
-                  <span className="text-xs text-muted-foreground">/ {t('perMonth')}</span>
+                  <span className="text-xs text-muted-foreground">/ {period}</span>
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  {p.priceUzs.toLocaleString('uz-UZ')} {t('currencyUzs')} / {t('perMonth')}
+                  {p.priceUzs.toLocaleString('uz-UZ')} {t('currencyUzs')} / {period}
                 </div>
 
                 <ul className="mt-5 space-y-2 flex-1">
@@ -164,9 +180,13 @@ export default function Billing() {
                 ) : (
                   <Button
                     className="mt-6 w-full"
+                    variant={yearly ? 'default' : 'outline'}
                     disabled={data && !data.atmosReady}
                     onClick={() =>
-                      setPayPlan({ id: p.id, name: p.name, priceUzs: p.priceUzs, priceUsd: p.priceUsd })
+                      setPayPlan({
+                        id: p.id, name: p.name, priceUzs: p.priceUzs,
+                        priceUsd: p.priceUsd, durationDays: p.durationDays,
+                      })
                     }
                   >
                     <CreditCard className="h-4 w-4" />
@@ -188,6 +208,28 @@ export default function Billing() {
           })}
         </div>
       )}
+
+      {/* Support bilan bog'lanish — to'lovda muammo bo'lsa */}
+      <div className="rounded-xl border bg-muted/30 px-5 py-4 flex items-center justify-between gap-3 flex-wrap max-w-2xl">
+        <div className="flex items-center gap-2 text-sm">
+          <LifeBuoy className="h-4 w-4 text-primary shrink-0" />
+          {t('supportPrompt')}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button asChild size="sm" variant="outline">
+            <a href="https://t.me/rateradar_support" target="_blank" rel="noreferrer">
+              <Send className="h-3.5 w-3.5" />
+              Telegram
+            </a>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <a href="mailto:info@thehotelsaas.com">
+              <Mail className="h-3.5 w-3.5" />
+              Email
+            </a>
+          </Button>
+        </div>
+      </div>
 
       {payPlan && (
         <PaymentModal

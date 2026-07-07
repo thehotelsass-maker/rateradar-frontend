@@ -127,7 +127,7 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
             </div>
             <div className="text-right text-xs text-muted-foreground">
               {plan.priceUsd ? <div className="text-sm font-semibold text-foreground">${plan.priceUsd}</div> : null}
-              / {t('perMonth')}
+              / {(plan.durationDays || 30) >= 365 ? t('perYear') : t('perMonth')}
             </div>
           </div>
         </div>
@@ -279,11 +279,28 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
           )}
         </div>
 
-        {/* Footer trust badge */}
+        {/* Footer trust badge + support */}
         {step !== 'success' && (
-          <div className="px-6 py-3 border-t flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            ATMOS · Humo — Visa {t('comingSoon').toLowerCase()}
+          <div className="px-6 py-3 border-t space-y-1 text-center text-[11px] text-muted-foreground">
+            <div className="flex items-center justify-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              ATMOS · Humo — Visa {t('comingSoon').toLowerCase()}
+            </div>
+            <div>
+              {t('supportPrompt')}{' '}
+              <a
+                href="https://t.me/rateradar_support"
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary hover:underline font-medium"
+              >
+                Telegram
+              </a>
+              {' · '}
+              <a href="mailto:info@thehotelsaas.com" className="text-primary hover:underline font-medium">
+                Email
+              </a>
+            </div>
           </div>
         )}
       </div>

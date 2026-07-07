@@ -493,6 +493,9 @@ export default function Landing() {
                 <div className="mt-1.5 text-sm text-muted-foreground">
                   {proPlan.priceUzs.toLocaleString('uz-UZ')} {t('currencyUzs')} / {t('perMonth')}
                 </div>
+                <div className="mt-1 text-xs text-green-600 font-medium">
+                  {t('perYear')}: $490 — {t('yearlySaveBadge')}
+                </div>
                 <div className="mt-1 text-xs text-muted-foreground/70">{proPlan.desc}</div>
               </div>
 

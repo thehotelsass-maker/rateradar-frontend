@@ -49,6 +49,7 @@ export default function Onboarding() {
   const [planInfo, setPlanInfo] = useState(null); // { plans, atmosReady }
   const [payPlan, setPayPlan] = useState(null);
   const [paid, setPaid] = useState(false);
+  const [periodId, setPeriodId] = useState('pro'); // pro (oylik) | pro_yearly (1 yil)
 
   useEffect(() => {
     searchApi.countries().then(setCountries).catch(console.error);
@@ -463,10 +464,12 @@ export default function Onboarding() {
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div>
             ) : (() => {
-              // Faqat pro (bitta reja) — eski backend bir nechta qaytarsa ham.
-              const paidPlan =
-                planInfo.plans?.find((p) => p.id === 'pro') || planInfo.plans?.[0];
-              if (!paidPlan) {
+              // Oylik (pro) + yillik (pro_yearly); eski backend'da faqat pro.
+              const opts = (planInfo.plans || []).filter(
+                (p) => p.id === 'pro' || p.id === 'pro_yearly',
+              );
+              const list = opts.length ? opts : (planInfo.plans || []).slice(0, 1);
+              if (!list.length) {
                 return (
                   <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-muted-foreground">
                     <Info className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
@@ -474,21 +477,60 @@ export default function Onboarding() {
                   </div>
                 );
               }
+              const sel = list.find((p) => p.id === periodId) || list[0];
               return (
                 <>
-                  {/* Reja kartasi — $49 / 590 000 so'm */}
+                  {/* Muddat tanlash — 1 oy / 1 yil (2 oy bepul) */}
+                  {list.length > 1 && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {list.map((p) => {
+                        const y = (p.durationDays || 30) >= 365;
+                        const isSel = sel.id === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setPeriodId(p.id)}
+                            className={cn(
+                              'rounded-xl border p-3 text-left transition-colors',
+                              isSel ? 'border-primary bg-primary/5 ring-1 ring-primary/40' : 'border-border hover:bg-accent',
+                            )}
+                          >
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              {y ? '1 yil' : '1 oy'}
+                              {y && (
+                                <span className="px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-600 text-[9px] font-semibold">
+                                  {t('yearlySaveBadge')}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xl font-bold tracking-tight mt-0.5">
+                              ${p.priceUsd}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {Number(p.priceUzs).toLocaleString('uz-UZ')} {t('currencyUzs')}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Reja imkoniyatlari */}
                   <div className="rounded-xl border bg-muted/30 p-5">
                     <div className="flex items-start justify-between">
                       <div>
-                        <div className="text-xs text-muted-foreground">{paidPlan.name}</div>
+                        <div className="text-xs text-muted-foreground">{sel.name}</div>
                         <div className="flex items-baseline gap-1.5 mt-1">
                           <span className="text-3xl font-bold tracking-tight">
-                            ${paidPlan.priceUsd || 49}
+                            ${sel.priceUsd || 49}
                           </span>
-                          <span className="text-xs text-muted-foreground">/ {t('perMonth')}</span>
+                          <span className="text-xs text-muted-foreground">
+                            / {(sel.durationDays || 30) >= 365 ? t('perYear') : t('perMonth')}
+                          </span>
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
-                          {Number(paidPlan.priceUzs).toLocaleString('uz-UZ')} {t('currencyUzs')} / {t('perMonth')}
+                          {Number(sel.priceUzs).toLocaleString('uz-UZ')} {t('currencyUzs')}
                         </div>
                       </div>
                       <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
@@ -520,10 +562,11 @@ export default function Onboarding() {
                     disabled={!planInfo.atmosReady}
                     onClick={() =>
                       setPayPlan({
-                        id: paidPlan.id,
-                        name: paidPlan.name,
-                        priceUzs: paidPlan.priceUzs,
-                        priceUsd: paidPlan.priceUsd,
+                        id: sel.id,
+                        name: sel.name,
+                        priceUzs: sel.priceUzs,
+                        priceUsd: sel.priceUsd,
+                        durationDays: sel.durationDays,
                       })
                     }
                   >
@@ -539,6 +582,23 @@ export default function Onboarding() {
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-medium">
                       Visa — {t('comingSoon').toLowerCase()}
                     </span>
+                  </div>
+
+                  {/* To'lovda muammo bo'lsa — support */}
+                  <div className="text-center text-[11px] text-muted-foreground">
+                    {t('supportPrompt')}{' '}
+                    <a
+                      href="https://t.me/rateradar_support"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Telegram
+                    </a>
+                    {' · '}
+                    <a href="mailto:info@thehotelsaas.com" className="text-primary hover:underline font-medium">
+                      Email
+                    </a>
                   </div>
                 </>
               );

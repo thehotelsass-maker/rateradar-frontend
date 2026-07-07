@@ -418,6 +418,24 @@ function ProviderCard({ provider: p }) {
 }
 
 function UsersTab({ users, reload }) {
+  // Email/ism bo'yicha server qidiruvi — dostup beriladigan hisobni
+  // (masalan thehotelsass@gmail.com, Dendi Plaza) tez topish uchun.
+  const [q, setQ] = useState('');
+  const [found, setFound] = useState(null); // qidiruv natijasi (null = props users)
+  const [busy, setBusy] = useState('');
+
+  useEffect(() => {
+    if (!q.trim()) { setFound(null); return; }
+    const tm = setTimeout(() => {
+      adminApi.users({ search: q.trim(), limit: 50 })
+        .then(setFound)
+        .catch(() => setFound(null));
+    }, 350);
+    return () => clearTimeout(tm);
+  }, [q]);
+
+  const data = found || users;
+
   if (!users) {
     return <div className="text-sm text-muted-foreground py-8 text-center">Yuklanmoqda...</div>;
   }
@@ -425,20 +443,63 @@ function UsersTab({ users, reload }) {
   async function toggle(id) {
     try {
       await adminApi.toggleUser(id);
-      await reload();
+      await refreshLists();
     } catch {}
+  }
+
+  // Dostup berish / bekor qilish (select'dan tanlanadi)
+  async function grant(id, value) {
+    if (value === '') return;
+    setBusy(id);
+    try {
+      if (value === 'revoke') await adminApi.revokePlan(id);
+      else await adminApi.grantPlan(id, Number(value));
+      await refreshLists();
+    } catch {}
+    setBusy('');
+  }
+
+  async function refreshLists() {
+    await reload();
+    if (q.trim()) {
+      const r = await adminApi.users({ search: q.trim(), limit: 50 }).catch(() => null);
+      if (r) setFound(r);
+    }
+  }
+
+  // Obuna holati yorlig'i: doimiy / sanagacha / muddati o'tgan
+  function planInfo(u) {
+    if (!u.plan || u.plan === 'free') return null;
+    if (!u.planExpiresAt) return { text: 'doimiy', cls: 'text-green-600' };
+    const d = new Date(u.planExpiresAt);
+    if (d < new Date()) return { text: 'muddati o\'tgan', cls: 'text-destructive' };
+    return { text: `→ ${d.toLocaleDateString('uz-UZ')}`, cls: 'text-muted-foreground' };
   }
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">
-          Barcha foydalanuvchilar ({users.total})
+        <CardTitle className="text-sm flex items-center justify-between gap-3 flex-wrap">
+          <span>Barcha foydalanuvchilar ({data.total})</span>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Email yoki ism qidirish..."
+              className="h-8 w-56 rounded-md border bg-background pl-8 pr-2 text-xs font-normal outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="px-0">
         <div className="divide-y">
-          {(users.users || []).map((u) => (
+          {(data.users || []).length === 0 && (
+            <div className="px-6 py-8 text-center text-sm text-muted-foreground">Topilmadi</div>
+          )}
+          {(data.users || []).map((u) => {
+            const pi = planInfo(u);
+            return (
             <div key={u._id} className="px-6 py-3 flex items-center gap-3">
               <div className={cn(
                 'w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold shrink-0',
@@ -450,6 +511,7 @@ function UsersTab({ users, reload }) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-sm truncate">{u.name}</span>
                   <Badge variant="secondary" className="text-[10px] capitalize">{u.plan}</Badge>
+                  {pi && <span className={cn('text-[10px]', pi.cls)}>{pi.text}</span>}
                   {u.role === 'admin' && <Badge variant="default" className="text-[10px]">Admin</Badge>}
                   {!u.isActive && <Badge variant="destructive" className="text-[10px]">Bloklangan</Badge>}
                 </div>
@@ -457,21 +519,37 @@ function UsersTab({ users, reload }) {
                   {u.email} • {u.city || u.countryCode || '—'}
                 </div>
               </div>
-              <div className="text-right shrink-0">
-                <div className="text-[10px] text-muted-foreground">
-                  {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : '—'}
-                </div>
-                <Button
-                  size="sm"
-                  variant={u.isActive ? 'outline' : 'default'}
-                  onClick={() => toggle(u._id)}
-                  className="text-[10px] h-7 mt-1"
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Dostup berish paneli — to'lovsiz Pro (hamkor/demo hisoblar) */}
+                <select
+                  value=""
+                  disabled={busy === u._id}
+                  onChange={(e) => grant(u._id, e.target.value)}
+                  className="h-7 rounded-md border bg-background px-1.5 text-[11px] text-muted-foreground outline-none disabled:opacity-50"
                 >
-                  {u.isActive ? 'Bloklash' : 'Yoqish'}
-                </Button>
+                  <option value="" disabled>{busy === u._id ? '...' : 'Dostup berish'}</option>
+                  <option value="30">Pro — 1 oy</option>
+                  <option value="365">Pro — 1 yil</option>
+                  <option value="0">Pro — Doimiy</option>
+                  {u.plan !== 'free' && <option value="revoke">✕ Bekor qilish (Free)</option>}
+                </select>
+                <div className="text-right">
+                  <div className="text-[10px] text-muted-foreground">
+                    {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : '—'}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={u.isActive ? 'outline' : 'default'}
+                    onClick={() => toggle(u._id)}
+                    className="text-[10px] h-7 mt-1"
+                  >
+                    {u.isActive ? 'Bloklash' : 'Yoqish'}
+                  </Button>
+                </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
