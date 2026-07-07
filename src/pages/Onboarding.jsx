@@ -1,17 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, MapPin, Building2, Globe, Loader2, Check, Search } from 'lucide-react';
+import {
+  ArrowLeft, ArrowRight, MapPin, Building2, Globe, Loader2, Check, Search,
+  CreditCard, ShieldCheck, Info,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { AuthBrandPanel } from '@/components/AuthBrandPanel';
+import { PaymentModal } from '@/components/PaymentModal';
 import { SearchSelect } from '@/components/ui/search-select';
 import { useT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
-import { searchApi, hotelApi, authApi } from '@/lib/api';
+import { searchApi, hotelApi, authApi, paymentApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
+
+// Obuna faolmi? (free emas va muddati o'tmagan)
+function isPlanActive(u) {
+  return Boolean(
+    u?.plan && u.plan !== 'free' &&
+    (!u.planExpiresAt || new Date(u.planExpiresAt) > new Date()),
+  );
+}
 
 export default function Onboarding() {
   const t = useT();
@@ -33,10 +45,23 @@ export default function Onboarding() {
   const [cityHotels, setCityHotels] = useState([]);
   const [hotelsLoading, setHotelsLoading] = useState(false);
   const [hotelFilter, setHotelFilter] = useState('');
+  // 4-qadam — to'lov: reja ma'lumoti + modal + to'landi flagi
+  const [planInfo, setPlanInfo] = useState(null); // { plans, atmosReady }
+  const [payPlan, setPayPlan] = useState(null);
+  const [paid, setPaid] = useState(false);
 
   useEffect(() => {
     searchApi.countries().then(setCountries).catch(console.error);
   }, []);
+
+  // 4-qadamga (to'lov) o'tilganda sotib olinadigan rejani yuklaymiz.
+  useEffect(() => {
+    if (step !== 4 || planInfo) return;
+    paymentApi
+      .plans()
+      .then(setPlanInfo)
+      .catch(() => setPlanInfo({ plans: [], atmosReady: false }));
+  }, [step, planInfo]);
 
   useEffect(() => {
     setCity(null);
@@ -124,13 +149,34 @@ export default function Onboarding() {
       // Refresh user
       const { user: refreshedUser } = await authApi.me();
       updateUser(refreshedUser);
-      navigate('/dashboard', { replace: true });
+
+      // Ro'yxatdan o'tishning OXIRGI qadami — to'lov. Obuna allaqachon faol
+      // bo'lsa (masalan qayta onboarding) to'g'ridan-to'g'ri dashboardga.
+      if (isPlanActive(refreshedUser)) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        setStep(4);
+      }
     } catch (err) {
       setError(err.response?.data?.error || err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  // To'lov muvaffaqiyatli → user yangilanadi; modal yopilganda dashboardga.
+  async function handlePaid() {
+    setPaid(true);
+    try {
+      const { user: u } = await authApi.me();
+      if (u) updateUser(u);
+    } catch { /* refresh xatosi — dashboardda qayta urinadi */ }
+  }
+
+  function handlePayModalClose() {
+    setPayPlan(null);
+    if (paid) navigate('/dashboard', { replace: true });
+  }
 
   const canProceed =
     (step === 1 && country) ||
@@ -163,7 +209,7 @@ export default function Onboarding() {
           <div className="bg-card border rounded-2xl p-8 shadow-lg">
         {/* Stepper */}
         <div className="flex gap-2 mb-7">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
               className={cn(
@@ -176,17 +222,19 @@ export default function Onboarding() {
 
         <div className="mb-6">
           <div className="text-[11px] uppercase tracking-wider text-primary font-semibold mb-1.5">
-            {t('onboarding')} · {step}/3
+            {t('onboarding')} · {step}/4
           </div>
           <h2 className="text-2xl font-semibold tracking-tight">
             {step === 1 && t('selectCountry')}
             {step === 2 && t('selectCity')}
             {step === 3 && t('findHotel')}
+            {step === 4 && t('onboardPayHeading')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1.5">
             {step === 1 && t('selectCountryDesc')}
             {step === 2 && t('selectCityDesc')}
             {step === 3 && t('findHotelDesc')}
+            {step === 4 && t('onboardPayDesc')}
           </p>
         </div>
 
@@ -407,37 +455,135 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* Footer buttons */}
-        <div className="flex justify-between gap-3 mt-7">
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => setStep(step - 1)}
-            disabled={step === 1 || loading}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t('back')}
-          </Button>
+        {/* Step 4 — To'lov (ro'yxatdan o'tishning oxirgi qadami) */}
+        {step === 4 && (
+          <div className="space-y-4">
+            {!planInfo ? (
+              <div className="flex items-center justify-center py-10 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+              </div>
+            ) : (() => {
+              // Faqat pro (bitta reja) — eski backend bir nechta qaytarsa ham.
+              const paidPlan =
+                planInfo.plans?.find((p) => p.id === 'pro') || planInfo.plans?.[0];
+              if (!paidPlan) {
+                return (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-muted-foreground">
+                    <Info className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
+                    {t('paymentNotReady')}
+                  </div>
+                );
+              }
+              return (
+                <>
+                  {/* Reja kartasi — $49 / 590 000 so'm */}
+                  <div className="rounded-xl border bg-muted/30 p-5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="text-xs text-muted-foreground">{paidPlan.name}</div>
+                        <div className="flex items-baseline gap-1.5 mt-1">
+                          <span className="text-3xl font-bold tracking-tight">
+                            ${paidPlan.priceUsd || 49}
+                          </span>
+                          <span className="text-xs text-muted-foreground">/ {t('perMonth')}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {Number(paidPlan.priceUzs).toLocaleString('uz-UZ')} {t('currencyUzs')} / {t('perMonth')}
+                        </div>
+                      </div>
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                        <ShieldCheck className="h-5 w-5" />
+                      </div>
+                    </div>
+                    <ul className="mt-4 space-y-2">
+                      {['planProFeat1', 'planProFeat2', 'planProFeat3', 'planProFeat4'].map((fk) => (
+                        <li key={fk} className="flex items-start gap-2 text-sm">
+                          <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                            <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                          </div>
+                          <span>{t(fk)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-          {step < 3 ? (
-            <Button className="rounded-full" onClick={() => setStep(step + 1)} disabled={!canProceed}>
-              {t('next')}
-              <ArrowRight className="h-4 w-4" />
+                  {!planInfo.atmosReady && (
+                    <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-muted-foreground">
+                      <Info className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
+                      {t('paymentNotReady')}
+                    </div>
+                  )}
+
+                  <Button
+                    className="w-full rounded-full h-11"
+                    size="lg"
+                    disabled={!planInfo.atmosReady}
+                    onClick={() =>
+                      setPayPlan({
+                        id: paidPlan.id,
+                        name: paidPlan.name,
+                        priceUzs: paidPlan.priceUzs,
+                        priceUsd: paidPlan.priceUsd,
+                      })
+                    }
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    {t('activateSubscription')}
+                  </Button>
+
+                  {/* To'lov usullari: Humo faol · Visa tez orada */}
+                  <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 font-medium">
+                      <span className="w-1 h-1 rounded-full bg-green-500" /> Humo
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-medium">
+                      Visa — {t('comingSoon').toLowerCase()}
+                    </span>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Footer buttons — to'lov qadamida yashiriladi (to'lovsiz o'tib bo'lmaydi) */}
+        {step < 4 && (
+          <div className="flex justify-between gap-3 mt-7">
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setStep(step - 1)}
+              disabled={step === 1 || loading}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {t('back')}
             </Button>
-          ) : (
-            <Button className="rounded-full" onClick={handleSubmit} disabled={!canProceed || loading}>
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="h-4 w-4" />
-              )}
-              {t('finish')}
-            </Button>
-          )}
-        </div>
+
+            {step < 3 ? (
+              <Button className="rounded-full" onClick={() => setStep(step + 1)} disabled={!canProceed}>
+                {t('next')}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button className="rounded-full" onClick={handleSubmit} disabled={!canProceed || loading}>
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
+                {t('finish')}
+              </Button>
+            )}
+          </div>
+        )}
           </div>
         </motion.div>
       </div>
+
+      {/* ATMOS to'lov oynasi (Humo karta + SMS-OTP) */}
+      {payPlan && (
+        <PaymentModal plan={payPlan} onClose={handlePayModalClose} onSuccess={handlePaid} />
+      )}
     </div>
   );
 }

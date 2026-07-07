@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  X, CreditCard, ShieldCheck, Loader2, CheckCircle2, Info, Globe, ChevronRight,
+  X, CreditCard, ShieldCheck, Loader2, CheckCircle2, ChevronRight, Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,25 +54,6 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
     const d = v.replace(/\D/g, '').slice(0, 4);
     return d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
   };
-
-  // ATMOS to'lov sahifasi (Visa/MC/UzCard/Humo) → tashqi sahifaga yo'naltirish
-  async function handlePayViaPage() {
-    setError('');
-    setLoading(true);
-    try {
-      const successUrl = `${window.location.origin}/billing`;
-      const { url } = await paymentApi.createInvoice(plan.id, successUrl);
-      if (url) {
-        window.location.href = url; // ATMOS hosted checkout sahifasi
-      } else {
-        setError('URL olinmadi');
-        setLoading(false);
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || err.message);
-      setLoading(false);
-    }
-  }
 
   async function handleSendCard(e) {
     e.preventDefault();
@@ -144,7 +125,10 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
               <div className="text-xs text-muted-foreground">{plan.name} — {t('payForPlan')}</div>
               <div className="text-lg font-semibold tracking-tight">{priceStr}</div>
             </div>
-            <div className="text-xs text-muted-foreground">/ {t('perMonth')}</div>
+            <div className="text-right text-xs text-muted-foreground">
+              {plan.priceUsd ? <div className="text-sm font-semibold text-foreground">${plan.priceUsd}</div> : null}
+              / {t('perMonth')}
+            </div>
           </div>
         </div>
 
@@ -156,7 +140,7 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
                 {t('choosePayMethod')}
               </div>
 
-              {/* Saytda karta + SMS-OTP — UzCard/Humo (asosiy, ishonchli oqim) */}
+              {/* Humo karta — FAOL usul (saytda karta + SMS-OTP) */}
               <button
                 onClick={() => setStep('card')}
                 disabled={loading}
@@ -167,34 +151,31 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{t('payViaCardTitle')}</span>
-                    <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold">
-                      {t('recommended')}
+                    <span className="text-sm font-medium">{t('payWithHumo')}</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-600 text-[9px] font-semibold">
+                      {t('activeBadge')}
                     </span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">{t('payViaCardDesc')}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{t('payWithHumoDesc')}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </button>
 
-              {/* ATMOS to'lov sahifasi — Visa/MC/UzCard/Humo (ikkilamchi; checkout
-                  yoqilmagan store'da ishlamasligi mumkin) */}
-              <button
-                onClick={handlePayViaPage}
-                disabled={loading}
-                className="w-full text-left rounded-xl border hover:bg-accent/40 transition-colors p-4 flex items-center gap-3 disabled:opacity-60"
-              >
+              {/* Visa / Mastercard — TEZ ORADA (hozircha o'chirilgan) */}
+              <div className="w-full text-left rounded-xl border border-dashed p-4 flex items-center gap-3 opacity-60 cursor-not-allowed select-none">
                 <div className="w-9 h-9 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+                  <Clock className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium">{t('payViaPageTitle')}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {loading ? t('redirectingToAtmos') : t('payViaPageDesc')}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Visa · Mastercard</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 text-[9px] font-semibold">
+                      {t('comingSoon')}
+                    </span>
                   </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{t('visaSoonDesc')}</div>
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </button>
+              </div>
 
               {error && <p className="text-xs text-destructive">{error}</p>}
             </div>
@@ -230,11 +211,6 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
                   onChange={(e) => setExpiry(fmtExpiry(e.target.value))}
                   required
                 />
-              </div>
-
-              <div className="flex items-start gap-2 rounded-md bg-blue-500/5 border border-blue-500/20 px-3 py-2 text-[11px] text-muted-foreground">
-                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-blue-500" />
-                <span>{t('testCardHint')}</span>
               </div>
 
               {error && <p className="text-xs text-destructive">{error}</p>}
@@ -307,7 +283,7 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
         {step !== 'success' && (
           <div className="px-6 py-3 border-t flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
             <ShieldCheck className="h-3.5 w-3.5" />
-            ATMOS · UzCard · Humo
+            ATMOS · Humo — Visa {t('comingSoon').toLowerCase()}
           </div>
         )}
       </div>

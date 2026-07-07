@@ -61,51 +61,20 @@ export default function Landing() {
     { num: '03', title: t('step3Title'), desc: t('step3Desc') },
   ];
 
-  // Narxlar so'mda — backend config/plans.js bilan mos bo'lishi kerak.
-  const plans = [
-    {
-      id: 'free',
-      title: t('planFreeTitle'),
-      desc: t('planFreeDesc'),
-      priceUzs: 0,
-      features: [
-        t('planFreeFeat1'),
-        t('planFreeFeat2'),
-        t('planFreeFeat3'),
-        t('planFreeFeat4'),
-      ],
-      cta: t('getStarted'),
-      popular: false,
-    },
-    {
-      id: 'starter',
-      title: t('planStarterTitle'),
-      desc: t('planStarterDesc'),
-      priceUzs: 1000, // TEST: vaqtincha 1000 so'm. ASLI: 99000
-      features: [
-        t('planStarterFeat1'),
-        t('planStarterFeat2'),
-        t('planStarterFeat3'),
-        t('planStarterFeat4'),
-      ],
-      cta: t('subscribe'),
-      popular: true,
-    },
-    {
-      id: 'pro',
-      title: t('planProTitle'),
-      desc: t('planProDesc'),
-      priceUzs: 1000, // TEST: vaqtincha 1000 so'm. ASLI: 199000
-      features: [
-        t('planProFeat1'),
-        t('planProFeat2'),
-        t('planProFeat3'),
-        t('planProFeat4'),
-      ],
-      cta: t('subscribe'),
-      popular: false,
-    },
-  ];
+  // Bitta reja — $49 (590 000 so'm/oy). Backend config/plans.js bilan mos.
+  const proPlan = {
+    id: 'pro',
+    title: t('planProTitle'),
+    desc: t('planOneDesc'),
+    priceUzs: 590000,
+    priceUsd: 49,
+    features: [
+      t('planProFeat1'),
+      t('planProFeat2'),
+      t('planProFeat3'),
+      t('planProFeat4'),
+    ],
+  };
 
   // Mehmonxona xizmati bosqichlari (QR → xizmat → Telegram → hisobot)
   const hsSteps = [
@@ -140,12 +109,14 @@ export default function Landing() {
     { num: 3, suffix: '', label: t('statLangs') },
   ];
 
-  // Reja tugmasi: Free → ro'yxatdan o'tish; pulli → kirgan bo'lsa to'lov oynasi,
-  // aks holda avval login/register sahifasiga.
-  function handlePlanCta(p) {
-    if (p.id === 'free') return navigate('/register');
+  // To'lov tugmasi: kirmagan bo'lsa — "Ro'yxatdan o'ting" (register sahifasiga;
+  // onboarding oxirida to'lov so'raladi). Kirgan bo'lsa — to'lov oynasi.
+  function handlePlanCta() {
     if (!isAuthenticated) return navigate('/register');
-    setPayPlan({ id: p.id, name: p.title, priceUzs: p.priceUzs });
+    setPayPlan({
+      id: proPlan.id, name: proPlan.title,
+      priceUzs: proPlan.priceUzs, priceUsd: proPlan.priceUsd,
+    });
   }
 
   return (
@@ -501,71 +472,60 @@ export default function Landing() {
             <p className="mt-4 text-muted-foreground">{t('pricingSub')}</p>
           </Reveal>
 
-          <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto items-stretch">
-            {plans.map((p, i) => (
-              <StaggerItem
-                key={i}
-                whileHover={{ y: -6 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                className={`relative rounded-2xl border p-7 flex flex-col bg-card transition-shadow ${
-                  p.popular
-                    ? 'border-primary ring-2 ring-primary/40 shadow-2xl shadow-primary/15 lg:scale-105 z-10'
-                    : 'hover:shadow-lg'
-                }`}
+          <Stagger className="max-w-md mx-auto">
+            <StaggerItem
+              whileHover={{ y: -6 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+              className="relative rounded-2xl border border-primary ring-2 ring-primary/40 shadow-2xl shadow-primary/15 p-8 flex flex-col bg-card"
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-lg">
+                <span className="w-1.5 h-1.5 rounded-full bg-lime-300" />
+                {t('planProTitle')}
+              </div>
+
+              <div className="text-center">
+                <div className="mt-2 flex items-baseline justify-center gap-1.5">
+                  <span className="text-5xl font-bold tracking-tight">
+                    ${proPlan.priceUsd}
+                  </span>
+                  <span className="text-sm text-muted-foreground">/ {t('perMonth')}</span>
+                </div>
+                <div className="mt-1.5 text-sm text-muted-foreground">
+                  {proPlan.priceUzs.toLocaleString('uz-UZ')} {t('currencyUzs')} / {t('perMonth')}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground/70">{proPlan.desc}</div>
+              </div>
+
+              <ul className="mt-7 space-y-2.5 flex-1">
+                {proPlan.features.map((f, j) => (
+                  <li key={j} className="flex items-start gap-2.5 text-sm">
+                    <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                    </div>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                className="mt-7 w-full rounded-full"
+                size="lg"
+                onClick={handlePlanCta}
               >
-                {p.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-lg">
-                    <span className="w-1.5 h-1.5 rounded-full bg-lime-300" />
-                    {t('mostPopular')}
-                  </div>
-                )}
+                {isAuthenticated ? t('subscribe') : t('signUp')}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
 
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {p.title}
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground/70">
-                    {p.desc}
-                  </div>
-                </div>
-
-                <div className="mt-5 flex items-baseline gap-1.5">
-                  {p.priceUzs === 0 ? (
-                    <span className="text-4xl font-semibold tracking-tight">
-                      {t('priceFree')}
-                    </span>
-                  ) : (
-                    <>
-                      <span className="text-4xl font-semibold tracking-tight">
-                        {p.priceUzs.toLocaleString('uz-UZ')}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {t('currencyUzs')} / {t('perMonth')}
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <ul className="mt-6 space-y-2.5 flex-1">
-                  {p.features.map((f, j) => (
-                    <li key={j} className="flex items-start gap-2.5 text-sm">
-                      <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                      </div>
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  className="mt-7 w-full rounded-full"
-                  variant={p.popular ? 'default' : 'outline'}
-                  onClick={() => handlePlanCta(p)}
-                >
-                  {p.cta}
-                </Button>
-              </StaggerItem>
-            ))}
+              {/* To'lov usullari: Humo faol · Visa tez orada */}
+              <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 font-medium">
+                  <span className="w-1 h-1 rounded-full bg-green-500" /> Humo
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-medium">
+                  Visa — {t('comingSoon').toLowerCase()}
+                </span>
+              </div>
+            </StaggerItem>
           </Stagger>
         </div>
       </section>

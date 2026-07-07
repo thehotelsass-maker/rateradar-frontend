@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Check, Loader2, Sparkles, CreditCard, Info, CheckCircle2 } from 'lucide-react';
+import { Check, Loader2, Sparkles, CreditCard, Info, CheckCircle2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PaymentModal } from '@/components/PaymentModal';
+import { isPlanActive } from '@/components/ProtectedRoute';
 import { useAuth } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
 import { paymentApi } from '@/lib/api';
@@ -62,11 +63,14 @@ export default function Billing() {
 
   const currentPlan = user?.plan || 'free';
   const expires = user?.planExpiresAt ? new Date(user.planExpiresAt) : null;
+  const planActive = isPlanActive(user);
+  const paywall = searchParams.get('paywall') === '1' || !planActive;
 
-  // Ko'rsatiladigan rejalar: Free (statik) + backenddan kelgan pulli rejalar.
-  const freeCard = { id: 'free', name: t('planFreeTitle'), priceUzs: 0 };
-  const paidCards = data?.plans || [];
-  const cards = [freeCard, ...paidCards];
+  // Hozircha bitta sotib olinadigan reja (pro — $49 / 590 000 so'm).
+  // Backend eski versiya bo'lib bir nechta reja qaytarsa ham faqat pro ko'rsatiladi.
+  const paidPlans = data?.plans || [];
+  const proOnly = paidPlans.find((p) => p.id === 'pro') || paidPlans[0];
+  const cards = proOnly ? [proOnly] : [];
 
   return (
     <div className="space-y-6 animate-fade-in max-w-4xl">
@@ -79,6 +83,14 @@ export default function Billing() {
         <div className="flex items-center gap-2 rounded-lg border border-green-500/30 bg-green-500/5 px-4 py-3 text-sm">
           <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
           {t('paymentSuccessMsg')}
+        </div>
+      )}
+
+      {/* Paywall — obuna faol emas: to'lovsiz tizimga kirib bo'lmaydi */}
+      {!paidBanner && paywall && (
+        <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+          <Lock className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+          {t('paywallNotice')}
         </div>
       )}
 
@@ -112,37 +124,26 @@ export default function Billing() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 max-w-sm">
           {cards.map((p) => {
-            const isCurrent = p.id === currentPlan;
-            const popular = p.id === 'starter';
+            const isCurrent = p.id === currentPlan && planActive;
             return (
               <div
                 key={p.id}
-                className={`relative rounded-xl border p-6 flex flex-col ${
-                  popular ? 'border-primary shadow-lg shadow-primary/10' : ''
-                } bg-card`}
+                className="relative rounded-xl border border-primary shadow-lg shadow-primary/10 p-6 flex flex-col bg-card"
               >
-                {popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-medium">
-                    {t('mostPopular')}
-                  </div>
-                )}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-medium">
+                  {p.name}
+                </div>
 
-                <div className="text-sm font-medium text-muted-foreground">{p.name}</div>
-                <div className="mt-4 flex items-baseline gap-1.5">
-                  {p.priceUzs === 0 ? (
-                    <span className="text-3xl font-semibold tracking-tight">{t('priceFree')}</span>
-                  ) : (
-                    <>
-                      <span className="text-3xl font-semibold tracking-tight">
-                        {p.priceUzs.toLocaleString('uz-UZ')}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {t('currencyUzs')} / {t('perMonth')}
-                      </span>
-                    </>
-                  )}
+                <div className="mt-2 flex items-baseline gap-1.5">
+                  <span className="text-3xl font-semibold tracking-tight">
+                    ${p.priceUsd || 49}
+                  </span>
+                  <span className="text-xs text-muted-foreground">/ {t('perMonth')}</span>
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {p.priceUzs.toLocaleString('uz-UZ')} {t('currencyUzs')} / {t('perMonth')}
                 </div>
 
                 <ul className="mt-5 space-y-2 flex-1">
@@ -160,19 +161,28 @@ export default function Billing() {
                   <Badge variant="secondary" className="mt-6 justify-center py-1.5">
                     {t('activePlanBadge')}
                   </Badge>
-                ) : p.id === 'free' ? (
-                  <div className="mt-6 h-9" />
                 ) : (
                   <Button
                     className="mt-6 w-full"
-                    variant={popular ? 'default' : 'outline'}
                     disabled={data && !data.atmosReady}
-                    onClick={() => setPayPlan({ id: p.id, name: p.name, priceUzs: p.priceUzs })}
+                    onClick={() =>
+                      setPayPlan({ id: p.id, name: p.name, priceUzs: p.priceUzs, priceUsd: p.priceUsd })
+                    }
                   >
                     <CreditCard className="h-4 w-4" />
                     {currentPlan === 'free' ? t('subscribe') : t('upgradePlan')}
                   </Button>
                 )}
+
+                {/* To'lov usullari: Humo faol · Visa tez orada */}
+                <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 font-medium">
+                    <span className="w-1 h-1 rounded-full bg-green-500" /> Humo
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-medium">
+                    Visa — {t('comingSoon').toLowerCase()}
+                  </span>
+                </div>
               </div>
             );
           })}
@@ -183,8 +193,10 @@ export default function Billing() {
         <PaymentModal
           plan={payPlan}
           onClose={() => setPayPlan(null)}
-          onSuccess={() => {
-            setPayPlan(null);
+          onSuccess={async () => {
+            // user.plan yangilansin — paywall darhol ochiladi.
+            await refreshUser();
+            setPaidBanner(true);
           }}
         />
       )}
