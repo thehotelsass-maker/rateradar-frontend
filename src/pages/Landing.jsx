@@ -26,6 +26,9 @@ import { PublicFooter } from '@/components/layout/PublicFooter';
 import { SupportChat } from '@/components/SupportChat';
 import { PaymentModal } from '@/components/PaymentModal';
 import { Reveal, Stagger, StaggerItem } from '@/components/ui/motion';
+import { HeroCarousel } from '@/components/HeroCarousel';
+import { FeatureCard } from '@/components/FeatureCard';
+import { HotelServiceMockup } from '@/components/HotelServiceMockup';
 import CountUp from '@/components/ui/CountUp';
 import { useT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
@@ -139,7 +142,7 @@ export default function Landing() {
           <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl opacity-50" />
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-20 sm:pb-24">
+        <div className="max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-20 sm:pb-24">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-10 items-center">
             {/* CHAP — matn */}
             <div className="text-center lg:text-left">
@@ -177,114 +180,15 @@ export default function Landing() {
               <p className="mt-6 text-xs text-muted-foreground">{t('trustBadge')}</p>
             </div>
 
-            {/* O'NG — dashboard mockup */}
-            <motion.div
-              className="relative"
-              initial={{ opacity: 0, y: 30, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            >
-            <div className="relative rounded-xl border bg-card shadow-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
-              {/* Mock browser bar */}
-              <div className="flex items-center gap-1.5 px-4 py-3 border-b bg-muted/30">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-400/70" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" />
-                <div className="w-2.5 h-2.5 rounded-full bg-green-400/70" />
-                <div className="ml-3 px-3 py-0.5 text-[11px] text-muted-foreground bg-card rounded-md border">
-                  app.thehotelsaas.com/dashboard
-                </div>
-              </div>
-
-              {/* Mock dashboard content */}
-              <div className="p-5 sm:p-7">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-                  {[
-                    { icon: Building2, label: 'My price', value: '$95', accent: true },
-                    { icon: BarChart3, label: 'Avg market', value: '$87' },
-                    { icon: TrendingUp, label: 'Position', value: '#3/12' },
-                    { icon: Zap, label: 'Competitors', value: '8' },
-                  ].map((s, i) => (
-                    <div
-                      key={i}
-                      className="rounded-lg border bg-card p-3.5 text-left"
-                    >
-                      <div
-                        className={`w-7 h-7 rounded-md mb-2 flex items-center justify-center ${
-                          s.accent
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-muted text-muted-foreground'
-                        }`}
-                      >
-                        <s.icon className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="text-xl font-semibold tracking-tight tabular-nums">
-                        {s.value}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
-                        {s.label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Mock chart */}
-                <div className="rounded-lg border bg-card p-4 text-left">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-sm font-medium">Price trend — 7 days</div>
-                    <div className="text-[11px] text-muted-foreground">Updated 2h ago</div>
-                  </div>
-                  <svg
-                    viewBox="0 0 600 140"
-                    className="w-full h-32"
-                    preserveAspectRatio="none"
-                  >
-                    <defs>
-                      <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d="M 0 80 Q 60 70, 100 65 T 200 50 T 300 55 T 400 35 T 500 40 T 600 25 L 600 140 L 0 140 Z"
-                      fill="url(#grad)"
-                    />
-                    <path
-                      d="M 0 80 Q 60 70, 100 65 T 200 50 T 300 55 T 400 35 T 500 40 T 600 25"
-                      fill="none"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M 0 100 Q 60 95, 100 92 T 200 88 T 300 95 T 400 80 T 500 85 T 600 75"
-                      fill="none"
-                      stroke="hsl(var(--muted-foreground))"
-                      strokeOpacity="0.3"
-                      strokeWidth="2"
-                      strokeDasharray="4 4"
-                    />
-                  </svg>
-                  <div className="flex items-center gap-4 mt-3 text-[11px] text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-0.5 bg-primary rounded" />
-                      My hotel
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-0.5 bg-muted-foreground/50 rounded" />
-                      Market avg
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            </motion.div>
+            {/* O'NG — avtomatik o'zgaruvchi karusel (slider) */}
+            <HeroCarousel />
           </div>
         </div>
       </section>
 
       {/* STATS BAND — iRoom uslubida yirik raqamlar */}
       <section className="border-y bg-muted/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+        <div className="max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
           <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {stats.map((s) => (
               <StaggerItem key={s.label}>
@@ -302,7 +206,7 @@ export default function Landing() {
       <section id="features" className="py-20 sm:py-28 border-t relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/[0.06] rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-500/[0.05] rounded-full blur-3xl -z-10" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative">
           <Reveal className="max-w-2xl mx-auto text-center mb-14">
             <Eyebrow>{t('navFeatures')}</Eyebrow>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
@@ -311,23 +215,10 @@ export default function Landing() {
             <p className="mt-4 text-muted-foreground">{t('featuresSub')}</p>
           </Reveal>
 
-          <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f, i) => (
-              <StaggerItem
-                key={i}
-                whileHover={{ y: -6 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                className="group relative bg-card p-7 rounded-2xl border hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-shadow overflow-hidden"
-              >
-                {/* hover'da paydo bo'luvchi yumshoq gradient fon */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <div className={`relative w-12 h-12 rounded-2xl bg-gradient-to-br ${featureColors[i % featureColors.length]} text-white flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300`}>
-                  <f.icon className="h-5 w-5" />
-                </div>
-                <h3 className="relative font-semibold text-base mb-2">{f.title}</h3>
-                <p className="relative text-sm text-muted-foreground leading-relaxed">
-                  {f.desc}
-                </p>
+              <StaggerItem key={i} style={{ perspective: "1000px" }}>
+                <FeatureCard feature={f} index={i} featureColors={featureColors} />
               </StaggerItem>
             ))}
           </Stagger>
@@ -336,7 +227,7 @@ export default function Landing() {
 
       {/* HOW IT WORKS */}
       <section id="how" className="py-20 sm:py-28 border-t bg-muted/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="max-w-2xl mx-auto text-center mb-14">
             <Eyebrow>{t('navHowItWorks')}</Eyebrow>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
@@ -344,18 +235,36 @@ export default function Landing() {
             </h2>
           </Reveal>
 
-          <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 max-w-[1400px] 2xl:max-w-[1600px] mx-auto relative z-10">
+            {/* Animated background line behind all steps */}
+            <div className="hidden md:block absolute top-16 left-[15%] right-[15%] h-px bg-border -z-10 overflow-hidden">
+              <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-primary/50 to-transparent -translate-x-full animate-shimmer" />
+            </div>
+
             {steps.map((s, i) => (
-              <StaggerItem key={i} className="relative">
-                {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-7 left-full w-full h-px bg-gradient-to-r from-border to-transparent -translate-x-6 z-0" />
-                )}
-                <div className="relative bg-card border rounded-2xl p-7 h-full hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300">
-                  <div className="text-5xl font-extrabold mb-3 tabular-nums bg-gradient-to-br from-primary to-violet-500 bg-clip-text text-transparent">
+              <StaggerItem key={i} className="relative group cursor-default">
+                <div className="relative h-full bg-card rounded-3xl p-8 lg:p-10 border hover:border-primary/30 transition-colors duration-500 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/10">
+                  {/* Huge background number */}
+                  <div className="absolute -right-6 -bottom-6 text-[140px] font-black text-primary/[0.03] group-hover:text-primary/[0.06] group-hover:-translate-y-4 group-hover:-translate-x-4 transition-all duration-700 pointer-events-none select-none">
                     {s.num}
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">{s.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  
+                  {/* Gradient glow on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-violet-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                  {/* Icon / Number Container */}
+                  <div className="relative mb-8">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-violet-500/10 text-primary group-hover:from-primary group-hover:to-violet-500 group-hover:text-white flex items-center justify-center shadow-inner transition-colors duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                      <span className="text-2xl font-bold tabular-nums">
+                        {s.num}
+                      </span>
+                    </div>
+                  </div>
+
+                  <h3 className="font-bold text-xl mb-3 relative z-10 group-hover:text-primary transition-colors duration-300">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed relative z-10">
                     {s.desc}
                   </p>
                 </div>
@@ -367,7 +276,7 @@ export default function Landing() {
 
       {/* HOTEL SERVICE — QR + Telegram */}
       <section id="hotel-service" className="py-20 sm:py-28 border-t">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Chap: matn + bosqichlar */}
             <Reveal>
@@ -382,20 +291,20 @@ export default function Landing() {
                 {t('hsSub')}
               </p>
 
-              <div className="mt-8 space-y-5">
+              <div className="mt-8 space-y-6">
                 {hsSteps.map((s, i) => (
-                  <div key={i} className="flex gap-4">
+                  <div key={i} className="flex gap-4 group cursor-default">
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-violet-500 text-white flex items-center justify-center shadow-md shadow-primary/20">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-violet-500/10 text-primary group-hover:from-primary group-hover:to-violet-500 group-hover:text-white flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:shadow-primary/20 transition-all duration-500 group-hover:scale-110">
                         <s.icon className="h-5 w-5" />
                       </div>
                       {i < hsSteps.length - 1 && (
-                        <div className="absolute left-1/2 top-10 w-px h-5 bg-border -translate-x-1/2" />
+                        <div className="absolute left-1/2 top-14 w-px h-6 bg-border -translate-x-1/2 group-hover:bg-primary/30 transition-colors duration-500" />
                       )}
                     </div>
-                    <div>
-                      <div className="font-semibold text-sm">{s.title}</div>
-                      <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
+                    <div className="pt-1 transition-transform duration-500 group-hover:translate-x-2">
+                      <div className="font-bold text-base group-hover:text-primary transition-colors">{s.title}</div>
+                      <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
                         {s.desc}
                       </p>
                     </div>
@@ -404,57 +313,9 @@ export default function Landing() {
               </div>
             </Reveal>
 
-            {/* O'ng: telefon mockup — QR menyu */}
-            <Reveal as="div" delay={0.12} className="relative flex justify-center">
-              {/* fon yorug'lik */}
-              <div className="absolute inset-0 -z-10 flex items-center justify-center">
-                <div className="w-72 h-72 bg-primary/10 rounded-full blur-3xl opacity-60" />
-              </div>
-
-              <div className="relative w-[280px] rounded-[2.2rem] border-[6px] border-foreground/10 bg-card shadow-2xl overflow-hidden">
-                {/* status bar */}
-                <div className="h-7 bg-muted/40 flex items-center justify-center">
-                  <div className="w-16 h-1.5 rounded-full bg-foreground/15" />
-                </div>
-
-                {/* header */}
-                <div className="px-5 pt-5 pb-4 text-center border-b">
-                  <div className="mx-auto w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2">
-                    <QrCode className="h-6 w-6" />
-                  </div>
-                  <div className="text-sm font-semibold">TheHotelSaaS Hotel</div>
-                  <div className="text-[11px] text-muted-foreground">Room 204</div>
-                </div>
-
-                {/* xizmat menyusi */}
-                <div className="px-4 py-4">
-                  <div className="text-[11px] font-medium text-muted-foreground mb-2.5">
-                    {t('hsMenuTitle')}
-                  </div>
-                  <div className="space-y-2">
-                    {hsServices.map((s, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-3 rounded-xl border bg-background px-3 py-2.5"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                          <s.icon className="h-4 w-4" />
-                        </div>
-                        <span className="text-[13px] font-medium">{s.label}</span>
-                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Telegram yetkazish indikatori */}
-                  <div className="mt-4 flex items-center gap-2 rounded-xl bg-primary/[0.06] border border-primary/15 px-3 py-2.5">
-                    <Send className="h-4 w-4 text-primary shrink-0" />
-                    <span className="text-[11px] text-muted-foreground">
-                      {t('hsStep3Title')}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {/* O'ng: jonlantirilgan telefon mockup */}
+            <Reveal as="div" delay={0.12} className="relative mt-10 lg:mt-0">
+              <HotelServiceMockup />
             </Reveal>
           </div>
         </div>
@@ -463,7 +324,7 @@ export default function Landing() {
       {/* PRICING */}
       <section id="pricing" className="py-20 sm:py-28 border-t bg-muted/20 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/[0.05] rounded-full blur-3xl -z-0" />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative">
           <Reveal className="max-w-2xl mx-auto text-center mb-14">
             <Eyebrow>{t('navPricing')}</Eyebrow>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
