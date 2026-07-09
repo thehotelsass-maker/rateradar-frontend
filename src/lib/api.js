@@ -121,6 +121,13 @@ export const hotelApi = {
       .then((r) => r.data),
   getCompetitorDetail: (id) =>
     api.get(`/hotels/competitors/${id}/detail`).then((r) => r.data),
+  updateCompetitorOtaUrls: (id, otaUrls) =>
+    api.put(`/hotels/competitors/${id}/ota-urls`, { otaUrls }).then((r) => r.data.competitor),
+  fetchCompetitorChannel: (id, source) =>
+    // Apify kanal so'rovi 30-90s davom etishi mumkin — 3 daqiqa timeout.
+    api
+      .post(`/hotels/competitors/${id}/fetch-channel`, { source }, { timeout: 3 * 60 * 1000 })
+      .then((r) => r.data),
 };
 
 export const adminApi = {

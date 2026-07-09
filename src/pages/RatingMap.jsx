@@ -510,7 +510,7 @@ export default function RatingMap() {
   );
 }
 
-// Booking subscore yorliqlarini tarjima qilamiz
+// Kategoriya yorliqlarini tarjima qilamiz (Booking subscore + Google breakdown)
 const CAT_LABELS = {
   'Location': { uz: 'Joylashuv', ru: 'Расположение', en: 'Location' },
   'Cleanliness': { uz: 'Tozalik', ru: 'Чистота', en: 'Cleanliness' },
@@ -519,6 +519,23 @@ const CAT_LABELS = {
   'Facilities': { uz: 'Qulayliklar', ru: 'Удобства', en: 'Facilities' },
   'Value for money': { uz: 'Narx-sifat', ru: 'Цена/качество', en: 'Value for money' },
   'Free Wifi': { uz: 'Wi-Fi', ru: 'Wi-Fi', en: 'Free WiFi' },
+  'Service': { uz: 'Xizmat', ru: 'Сервис', en: 'Service' },
+  'Property': { uz: 'Bino va hudud', ru: 'Здание и территория', en: 'Property' },
+  'Room': { uz: 'Xona', ru: 'Номер', en: 'Room' },
+  'Rooms': { uz: 'Xonalar', ru: 'Номера', en: 'Rooms' },
+  'Breakfast': { uz: 'Nonushta', ru: 'Завтрак', en: 'Breakfast' },
+  'Dining': { uz: 'Ovqatlanish', ru: 'Питание', en: 'Dining' },
+  'Bar': { uz: 'Bar', ru: 'Бар', en: 'Bar' },
+  'Pool': { uz: 'Basseyn', ru: 'Бассейн', en: 'Pool' },
+  'Fitness': { uz: 'Fitnes', ru: 'Фитнес', en: 'Fitness' },
+  'Wellness': { uz: 'Sog\'lomlashtirish', ru: 'Велнес', en: 'Wellness' },
+  'Sleep': { uz: 'Uyqu', ru: 'Сон', en: 'Sleep' },
+  'Atmosphere': { uz: 'Muhit', ru: 'Атмосфера', en: 'Atmosphere' },
+  'Parking': { uz: 'Avtoturargoh', ru: 'Парковка', en: 'Parking' },
+  'Bathroom': { uz: 'Hammom', ru: 'Ванная', en: 'Bathroom' },
+  'Safety': { uz: 'Xavfsizlik', ru: 'Безопасность', en: 'Safety' },
+  'Nearby activities': { uz: 'Atrofdagi mashg\'ulotlar', ru: 'Развлечения рядом', en: 'Nearby activities' },
+  'Accessibility': { uz: 'Qulaylik (nogironlar)', ru: 'Доступность', en: 'Accessibility' },
 };
 
 function catLabel(label, lang) {
@@ -542,7 +559,7 @@ function CategoryRatingsPanel({ data, loading, onRefresh, t, lang }) {
         <button
           onClick={onRefresh}
           disabled={loading}
-          title={lang === 'uz' ? 'Booking.com\'dan yangilash' : lang === 'ru' ? 'Обновить с Booking.com' : 'Refresh from Booking.com'}
+          title={lang === 'uz' ? 'Yangilash' : lang === 'ru' ? 'Обновить' : 'Refresh'}
           className="text-muted-foreground hover:text-foreground disabled:opacity-50"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
@@ -592,7 +609,7 @@ function CategoryRatingsPanel({ data, loading, onRefresh, t, lang }) {
             ))}
             {data?.asOf && (
               <div className="text-[10px] text-muted-foreground pt-1">
-                Booking.com · {new Date(data.asOf).toLocaleDateString(lang === 'ru' ? 'ru-RU' : lang === 'uz' ? 'uz-UZ' : 'en-US', { day: 'numeric', month: 'short' })}
+                {data.source || 'Booking.com'} · {new Date(data.asOf).toLocaleDateString(lang === 'ru' ? 'ru-RU' : lang === 'uz' ? 'uz-UZ' : 'en-US', { day: 'numeric', month: 'short' })}
               </div>
             )}
           </div>

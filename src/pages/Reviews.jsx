@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   MessageSquare, Star, Sparkles, ThumbsUp, ThumbsDown, RefreshCw, Download,
-  Copy, Check, Send, X, Loader2,
+  Copy, Check, Send, X, Loader2, Pencil,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -342,22 +342,38 @@ const SOURCE_BORDER = {
 
 function ApifySourceCard({ source, label, url, configured, lang, onSaveUrl }) {
   const [input, setInput] = useState('');
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const l = (uz, en) => lang === 'uz' ? uz : en;
   const brand = getOtaBrand(label);
   if (!configured) return null;
 
   const clickable = Boolean(url);
+  // URL bo'lmasa yoki foydalanuvchi "qalam"ni bosgan bo'lsa — kiritish rejimi.
+  const showInput = !clickable || editing;
+
+  const startEdit = () => { setInput(url || ''); setEditing(true); setError(''); };
 
   const save = async () => {
     const v = input.trim();
     if (!v) return;
     setSaving(true);
-    try { await onSaveUrl?.(source, v); } catch { /* xato — jim */ } finally { setSaving(false); }
+    setError('');
+    try {
+      await onSaveUrl?.(source, v);
+      setEditing(false);
+      setInput('');
+    } catch (err) {
+      // Xatoni yutib yubormaymiz — foydalanuvchi "saqlanmadi"ni ko'rsin.
+      setError(err?.response?.data?.error || err?.message || l('Saqlashda xato', 'Save failed'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <Card className={cn(SOURCE_BORDER[source], clickable && 'transition-shadow hover:shadow-md')}>
+    <Card className={cn(SOURCE_BORDER[source], clickable && !editing && 'transition-shadow hover:shadow-md')}>
       <CardContent className="py-3 flex items-center gap-3">
         <div className={cn(
           'w-9 h-9 rounded-xl text-white font-semibold text-sm flex items-center justify-center shrink-0 shadow-soft',
@@ -366,30 +382,45 @@ function ApifySourceCard({ source, label, url, configured, lang, onSaveUrl }) {
           {brand.short}
         </div>
 
-        {clickable ? (
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={url}
-            className="min-w-0 flex-1 flex items-center gap-3"
-          >
-            <div className="min-w-0 flex-1">
-              <div className="text-xs flex items-center gap-1.5">
-                <span className="font-medium">{label}</span>
-                <span className="text-muted-foreground">— {l('sharhlar', 'reviews')}</span>
+        {!showInput ? (
+          <>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={url}
+              className="min-w-0 flex-1 flex items-center gap-3"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="text-xs flex items-center gap-1.5">
+                  <span className="font-medium">{label}</span>
+                  <span className="text-muted-foreground">— {l('sharhlar', 'reviews')}</span>
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-0.5 truncate">📎 {url}</div>
               </div>
-              <div className="text-[11px] text-muted-foreground mt-0.5 truncate">📎 {url}</div>
-            </div>
-            <span className="text-muted-foreground shrink-0 text-base leading-none">↗</span>
-          </a>
+              <span className="text-muted-foreground shrink-0 text-base leading-none">↗</span>
+            </a>
+            <button
+              onClick={startEdit}
+              title={l('Havolani o\'zgartirish', 'Edit URL')}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted shrink-0 transition-colors"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          </>
         ) : (
           <div className="min-w-0 flex-1">
             <div className="text-xs flex items-center gap-1.5">
               <span className="font-medium">{label}</span>
-              <span className="text-amber-600 dark:text-amber-400">
-                — {l('URL topilmadi — qo\'lda kiriting', 'URL not found — enter manually')}
-              </span>
+              {clickable ? (
+                <span className="text-muted-foreground">
+                  — {l('havolani o\'zgartirish', 'edit URL')}
+                </span>
+              ) : (
+                <span className="text-amber-600 dark:text-amber-400">
+                  — {l('URL topilmadi — qo\'lda kiriting', 'URL not found — enter manually')}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1.5 mt-1.5">
               <input
@@ -403,7 +434,15 @@ function ApifySourceCard({ source, label, url, configured, lang, onSaveUrl }) {
               <Button size="sm" variant="default" onClick={save} disabled={saving || !input.trim()}>
                 {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : l('Saqlash', 'Save')}
               </Button>
+              {clickable && (
+                <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setError(''); }} disabled={saving}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
+            {error && (
+              <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 break-all">{error}</p>
+            )}
           </div>
         )}
       </CardContent>

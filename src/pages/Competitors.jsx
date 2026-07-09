@@ -4,7 +4,7 @@ import {
   Plus, MapPin, Star, Trash2, Loader2, Building2, X,
   RefreshCw, DollarSign, Clock,
   ChevronRight, BarChart2, Mail, Map, List,
-  MessageSquare, ExternalLink, DownloadCloud,
+  MessageSquare, ExternalLink, DownloadCloud, Link2,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -242,6 +242,139 @@ function HotelCard({
   );
 }
 
+// ─── Raqib kanal havolalari editori ───────────────────
+// Har kanal uchun havola ko'rinadi va tahrirlanadi (xato bo'lsa foydalanuvchi
+// o'zi tuzatadi). "Narx olish" — saqlangan havoladan AYNAN o'sha kanal narxini
+// keltiradi (backend: POST /competitors/:id/fetch-channel, Apify).
+const COMP_CHANNELS = [
+  { source: 'booking', urlKey: 'Booking.com', label: 'Booking.com', placeholder: 'https://www.booking.com/hotel/...' },
+  { source: 'expedia', urlKey: 'Expedia', label: 'Expedia', placeholder: 'https://www.expedia.com/....Hotel-Information' },
+  { source: 'trip', urlKey: 'Trip.com', label: 'Trip.com', placeholder: 'https://www.trip.com/hotels/...' },
+  { source: 'hotels', urlKey: 'Hotels.com', label: 'Hotels.com', placeholder: 'https://www.hotels.com/ho.../' },
+];
+
+function ChannelLinksEditor({ comp, onPriceFetched }) {
+  const formatPrice = useFormatPrice();
+  const initialUrls = () => {
+    const src = comp.otaUrls || {};
+    const init = {};
+    for (const ch of COMP_CHANNELS) {
+      init[ch.urlKey] = src[ch.urlKey] || (ch.urlKey === 'Booking.com' ? comp.bookingUrl || '' : '');
+    }
+    return init;
+  };
+  const [urls, setUrls] = useState(initialUrls);
+  const [savedUrls, setSavedUrls] = useState(initialUrls);
+  const [savingKey, setSavingKey] = useState('');
+  const [fetchingKey, setFetchingKey] = useState('');
+  const [msg, setMsg] = useState({}); // urlKey -> { ok, text }
+
+  const setMsgFor = (k, ok, text) => setMsg((m) => ({ ...m, [k]: { ok, text } }));
+
+  const saveUrl = async (ch) => {
+    const val = (urls[ch.urlKey] || '').trim();
+    setSavingKey(ch.urlKey);
+    try {
+      await hotelApi.updateCompetitorOtaUrls(comp._id, { [ch.urlKey]: val });
+      setSavedUrls((s) => ({ ...s, [ch.urlKey]: val }));
+      setMsgFor(ch.urlKey, true, val ? '✓ Saqlandi' : '✓ O\'chirildi');
+      clearCachePrefix('compDetail:');
+    } catch (err) {
+      setMsgFor(ch.urlKey, false, err?.response?.data?.error || err.message);
+    } finally {
+      setSavingKey('');
+    }
+  };
+
+  const fetchPrice = async (ch) => {
+    setFetchingKey(ch.urlKey);
+    setMsgFor(ch.urlKey, true, '');
+    try {
+      const res = await hotelApi.fetchCompetitorChannel(comp._id, ch.source);
+      if (res.price > 0) {
+        setMsgFor(ch.urlKey, true, `✓ ${ch.label}: ${formatPrice(res.price)}`);
+        // Backend avtomatik topib saqlagan havolani ko'rsatamiz
+        if (res.url && !(urls[ch.urlKey] || '').trim()) {
+          setUrls((u) => ({ ...u, [ch.urlKey]: res.url }));
+          setSavedUrls((s) => ({ ...s, [ch.urlKey]: res.url }));
+        }
+        clearCachePrefix('compDetail:');
+        onPriceFetched?.();
+      } else {
+        setMsgFor(ch.urlKey, false, res.message || 'Narx kelmadi');
+      }
+    } catch (err) {
+      setMsgFor(ch.urlKey, false, err?.response?.data?.error || err.message);
+    } finally {
+      setFetchingKey('');
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border/60 bg-card/40 p-3.5 space-y-2.5">
+      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+        <Link2 className="h-3.5 w-3.5" />
+        Kanal havolalari — xato bo'lsa tuzating, "Narx" bosib o'sha kanaldan narx oling
+      </p>
+      {COMP_CHANNELS.map((ch) => {
+        const brand = getOtaBrand(ch.label);
+        const dirty = (urls[ch.urlKey] || '').trim() !== (savedUrls[ch.urlKey] || '').trim();
+        const m = msg[ch.urlKey];
+        return (
+          <div key={ch.urlKey}>
+            <div className="flex items-center gap-1.5">
+              <div className={cn(
+                'w-6 h-6 rounded-md shrink-0 flex items-center justify-center text-[9px] font-bold text-white',
+                brand.gradient
+              )}>
+                {brand.short}
+              </div>
+              <input
+                type="url"
+                value={urls[ch.urlKey] || ''}
+                onChange={(e) => setUrls((u) => ({ ...u, [ch.urlKey]: e.target.value }))}
+                onKeyDown={(e) => { if (e.key === 'Enter' && dirty) saveUrl(ch); }}
+                placeholder={ch.placeholder}
+                className="flex-1 min-w-0 text-[11px] font-mono px-2 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              {dirty && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="h-7 px-2 text-[11px]"
+                  onClick={() => saveUrl(ch)}
+                  disabled={savingKey === ch.urlKey}
+                >
+                  {savingKey === ch.urlKey ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Saqlash'}
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 text-[11px]"
+                onClick={() => fetchPrice(ch)}
+                disabled={fetchingKey === ch.urlKey || dirty}
+                title={dirty ? 'Avval havolani saqlang' : `${ch.label} narxini olish`}
+              >
+                {fetchingKey === ch.urlKey ? <Loader2 className="h-3 w-3 animate-spin" /> : <DownloadCloud className="h-3 w-3 mr-1" />}
+                {fetchingKey === ch.urlKey ? '' : 'Narx'}
+              </Button>
+            </div>
+            {m?.text && (
+              <p className={cn(
+                'text-[10px] mt-0.5 ml-8 break-all',
+                m.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
+              )}>
+                {m.text}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Detail Modal ─────────────────────────────────────
 function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
   const formatPrice = useFormatPrice();
@@ -376,48 +509,54 @@ function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
             <>
               {/* Tab: OTA Narxlar */}
               {activeTab === 'prices' && (
-                otaEntries.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    {otaEntries.map(([key, price]) => {
-                      const label = OTA_DISPLAY[key] || key;
-                      const brand = getOtaBrand(key);
-                      const diff = myPrice > 0 ? price - myPrice : null;
-                      return (
-                        <div
-                          key={key}
-                          className="flex items-center gap-2.5 rounded-xl bg-card/60 border border-border/60 p-3"
-                        >
-                          <div className={cn(
-                            'w-7 h-7 rounded-lg shrink-0 flex items-center justify-center text-[10px] font-bold text-white',
-                            brand.gradient
-                          )}>
-                            {brand.short}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[11px] text-muted-foreground truncate">{label}</div>
-                            <div className="text-sm font-semibold tabular-nums">{formatPrice(price)}</div>
-                          </div>
-                          {diff !== null && (
+                <>
+                  {otaEntries.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {otaEntries.map(([key, price]) => {
+                        const label = OTA_DISPLAY[key] || key;
+                        const brand = getOtaBrand(key);
+                        const diff = myPrice > 0 ? price - myPrice : null;
+                        return (
+                          <div
+                            key={key}
+                            className="flex items-center gap-2.5 rounded-xl bg-card/60 border border-border/60 p-3"
+                          >
                             <div className={cn(
-                              'text-[10px] font-semibold shrink-0',
-                              diff > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
+                              'w-7 h-7 rounded-lg shrink-0 flex items-center justify-center text-[10px] font-bold text-white',
+                              brand.gradient
                             )}>
-                              {diff > 0 ? `+${formatPrice(Math.round(diff))}` : `-${formatPrice(Math.round(Math.abs(diff)))}`}
+                              {brand.short}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-10 rounded-xl bg-muted/20 border border-dashed border-border">
-                    <DollarSign className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">Narxlar hali olinmagan</p>
-                    <p className="text-[11px] text-muted-foreground/70 mt-1">
-                      Quyidagi tugmani bosib narxlarni oling
-                    </p>
-                  </div>
-                )
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[11px] text-muted-foreground truncate">{label}</div>
+                              <div className="text-sm font-semibold tabular-nums">{formatPrice(price)}</div>
+                            </div>
+                            {diff !== null && (
+                              <div className={cn(
+                                'text-[10px] font-semibold shrink-0',
+                                diff > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
+                              )}>
+                                {diff > 0 ? `+${formatPrice(Math.round(diff))}` : `-${formatPrice(Math.round(Math.abs(diff)))}`}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 rounded-xl bg-muted/20 border border-dashed border-border">
+                      <DollarSign className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">Narxlar hali olinmagan</p>
+                      <p className="text-[11px] text-muted-foreground/70 mt-1">
+                        Quyidagi tugmani bosib narxlarni oling
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Kanal havolalari — xato bo'lsa foydalanuvchi o'zi tuzatadi,
+                      "Narx olish" o'sha kanaldan aynan shu havola bo'yicha narx keltiradi */}
+                  <ChannelLinksEditor comp={comp} onPriceFetched={loadDetail} />
+                </>
               )}
 
               {/* Tab: Narx tarixi */}

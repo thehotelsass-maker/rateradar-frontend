@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { CustomCursor } from '@/components/CustomCursor';
 
 import Landing from '@/pages/Landing';
 import About from '@/pages/About';
@@ -43,7 +42,6 @@ export default function App() {
 
   return (
     <>
-      <CustomCursor />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
         
