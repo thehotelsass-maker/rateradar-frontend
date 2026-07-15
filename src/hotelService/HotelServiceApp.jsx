@@ -17,6 +17,7 @@ import ServicesPage from "./pages/hotel/ServicesPage";
 import ReportsPage from "./pages/hotel/ReportsPage";
 import SettingsPage from "./pages/hotel/SettingsPage";
 import RoomQrPage from "./pages/hotel/RoomQrPage";
+import TvDevicesPage from "./pages/hotel/TvDevicesPage";
 import DesignPage from "./pages/hotel/DesignPage";
 import ReviewsPage from "./pages/hotel/ReviewsPage";
 
@@ -107,6 +108,7 @@ export default function HotelServiceApp() {
             <Route path="staff" element={<StaffPage />} />
             <Route path="services" element={<ServicesPage />} />
             <Route path="qr" element={<RoomQrPage />} />
+            <Route path="tv" element={<TvDevicesPage />} />
             <Route path="design" element={<DesignPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="reviews" element={<ReviewsPage />} />

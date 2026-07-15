@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Settings2, BarChart2, Cog, QrCode, Circle, Palette, Star,
+  LayoutDashboard, Users, Settings2, BarChart2, Cog, QrCode, Circle, Palette, Star, Tv,
 } from "lucide-react";
 import { useHotel } from "../../context/HotelContext";
 import { useToast } from "../../context/ToastContext";
@@ -16,6 +16,7 @@ const NAV = [
   { to: "/hotel-service/staff",     key: "staff",     icon: Users },
   { to: "/hotel-service/services",  key: "services",  icon: Settings2 },
   { to: "/hotel-service/qr",        key: "qr",        icon: QrCode },
+  { to: "/hotel-service/tv",        key: "tv",        icon: Tv },
   { to: "/hotel-service/design",    key: "design",    icon: Palette },
   { to: "/hotel-service/reports",   key: "reports",   icon: BarChart2 },
   { to: "/hotel-service/reviews",   key: "reviews",   icon: Star },

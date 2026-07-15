@@ -29,6 +29,7 @@ import RatingMap from '@/pages/RatingMap';
 import Notifications from '@/pages/Notifications';
 import HotelServiceApp from '@/hotelService/HotelServiceApp';
 import HotelServiceGuest from '@/hotelService/HotelServiceGuest';
+import TvPage from '@/hotelService/pages/tv/TvPage';
 
 export default function App() {
   const refresh = useAuth((s) => s.refresh);
@@ -54,6 +55,9 @@ export default function App() {
         <Route path="/offer" element={<Offer />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* TV vitrina — xonadagi Android TV kiosk sahifasi (ommaviy, to'liq ekran) */}
+        <Route path="/tv" element={<TvPage />} />
 
         {/* Mehmon (QR) oqimi — ommaviy, to'liq ekran (RateRadar shell'isiz) */}
         <Route path="/hotel-service/g/*" element={<HotelServiceGuest />} /> 
