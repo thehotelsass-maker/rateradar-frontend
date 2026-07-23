@@ -294,6 +294,15 @@ export default function Prices() {
     setShowProgress(true); // jonli animatsiyali panel
     try {
       const res = await pricesApi.refreshAll();
+      // Kunlik throttle — bugun yangilangan, yangi so'rov ketmadi.
+      if (res.throttled) {
+        setShowProgress(false);
+        setError(lang === 'uz' ? 'Narxlar bugun allaqachon yangilangan — hali o\'zgarmadi.'
+          : lang === 'ru' ? 'Цены сегодня уже обновлялись — пока без изменений.'
+          : 'Prices were already refreshed today — no changes yet.');
+        await loadCompetitors(days, channel);
+        return;
+      }
       // refreshResult shaklini moslashtirib qo'yamiz (eski UI bilan mos)
       setRefreshResult({
         channel: lang === 'uz' ? 'Barcha kanallar' : 'All channels',

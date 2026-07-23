@@ -135,6 +135,19 @@ export default function Dashboard() {
     setShowProgress(true); // jonli animatsiyali panelni ochamiz
     try {
       const res = await pricesApi.refreshAll();
+      // Kunlik throttle — bugun allaqachon yangilangan. Yangi so'rov ketmadi,
+      // bazadagi narxlar ko'rsatiladi + "o'zgarmadi" xabari.
+      if (res.throttled) {
+        setShowProgress(false);
+        setRefreshError('');
+        setRefreshResult({
+          throttled: true,
+          message: lang === 'uz' ? 'Narxlar bugun allaqachon yangilangan — hali o\'zgarmadi.'
+            : lang === 'ru' ? 'Цены сегодня уже обновлялись — пока без изменений.'
+            : 'Prices were already refreshed today — no changes yet.',
+        });
+        return;
+      }
       const updatedHotel = await hotelApi.getMine();
       const updatedComps = await hotelApi.competitors();
       setHotel(updatedHotel);
@@ -317,7 +330,12 @@ export default function Dashboard() {
               )}
               {refreshing ? t('refreshing') : t('refreshSerpApi')}
             </Button>
-            {refreshResult && (
+            {refreshResult?.throttled ? (
+              <div className="text-xs text-amber-600 dark:text-amber-400 inline-flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>{refreshResult.message}</span>
+              </div>
+            ) : refreshResult && (
               <div className="text-xs text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <span>

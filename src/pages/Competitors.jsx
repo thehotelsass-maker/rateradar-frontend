@@ -959,15 +959,17 @@ export default function Competitors() {
   const handleBulkFetch = async () => {
     if (bulkProgress.active) return;
     const ids = competitors.map((c) => c._id);
-    setBulkProgress({ done: 0, total: ids.length, active: true });
+    setBulkProgress({ done: 0, total: ids.length, active: true, throttled: false });
+    let throttledCount = 0;
     for (let i = 0; i < ids.length; i++) {
       try {
         const result = await hotelApi.fetchCompetitorPrice(ids[i]);
+        if (result?.throttled) throttledCount += 1;
         setCompetitors((prev) =>
           prev.map((c) => (c._id === ids[i] ? mergeCompetitorResult(c, result) : c))
         );
       } catch {}
-      setBulkProgress({ done: i + 1, total: ids.length, active: i + 1 < ids.length });
+      setBulkProgress({ done: i + 1, total: ids.length, active: i + 1 < ids.length, throttled: throttledCount === ids.length && ids.length > 0 });
     }
   };
 
@@ -1044,8 +1046,12 @@ export default function Competitors() {
         <div className="rounded-xl bg-card/60 border border-border/60 p-3.5 flex items-center gap-3">
           <div className="flex-1">
             <div className="flex justify-between text-xs mb-1.5">
-              <span className="text-muted-foreground">
-                {bulkProgress.active ? 'Narxlar olinmoqda...' : 'Yangilash tugadi'}
+              <span className={bulkProgress.throttled ? 'text-amber-500' : 'text-muted-foreground'}>
+                {bulkProgress.active
+                  ? 'Narxlar olinmoqda...'
+                  : bulkProgress.throttled
+                    ? 'Narxlar bugun allaqachon yangilangan — hali o‘zgarmadi'
+                    : 'Yangilash tugadi'}
               </span>
               <span className="font-medium tabular-nums">{bulkProgress.done}/{bulkProgress.total}</span>
             </div>
