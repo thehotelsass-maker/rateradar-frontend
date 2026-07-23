@@ -80,7 +80,8 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
     setError('');
     setLoading(true);
     try {
-      const successUrl = `${window.location.origin}/billing?paid=1`;
+      // Toza URL (query'siz) — backend ?pay=<id> ni o'zi qo'shadi.
+      const successUrl = `${window.location.origin}/billing`;
       const { url } = await paymentApi.createInvoice(plan.id, successUrl);
       if (url) {
         window.location.href = url; // ATMOS hosted to'lov sahifasi
