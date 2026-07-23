@@ -6,7 +6,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { paymentApi } from '@/lib/api';
-import { useT } from '@/lib/i18n';
+import { useT, useLang } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 
 /**
@@ -20,6 +20,7 @@ import { useAuth } from '@/lib/auth';
  */
 export function PaymentModal({ plan, onClose, onSuccess }) {
   const t = useT();
+  const lang = useLang((s) => s.lang);
   const updateUser = useAuth((s) => s.updateUser);
 
   const [step, setStep] = useState('method'); // method | card | otp | success
@@ -69,6 +70,26 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
     } catch (err) {
       setError(err.response?.data?.error || err.message);
     } finally {
+      setLoading(false);
+    }
+  }
+
+  // Visa/Mastercard — ATMOS to'lov sahifasiga yo'naltiramiz (CVV + 3D-Secure
+  // o'sha yerda). Mahalliy karta+OTP oqimi Visa'ni qo'llab-quvvatlamaydi.
+  async function handleVisaCheckout() {
+    setError('');
+    setLoading(true);
+    try {
+      const successUrl = `${window.location.origin}/billing?paid=1`;
+      const { url } = await paymentApi.createInvoice(plan.id, successUrl);
+      if (url) {
+        window.location.href = url; // ATMOS hosted to'lov sahifasi
+      } else {
+        setError(t('paymentNotReady') || 'To\'lov sahifasi yaratilmadi');
+        setLoading(false);
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || err.message);
       setLoading(false);
     }
   }
@@ -161,14 +182,14 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </button>
 
-              {/* Visa / Mastercard — FAOL (ATMOS bir xil karta oqimi bilan) */}
+              {/* Visa / Mastercard — ATMOS to'lov sahifasiga yo'naltiradi (CVV + 3DS) */}
               <button
-                onClick={() => setStep('card')}
+                onClick={handleVisaCheckout}
                 disabled={loading}
                 className="w-full text-left rounded-xl border border-primary/40 bg-primary/[0.04] hover:bg-primary/[0.08] transition-colors p-4 flex items-center gap-3 disabled:opacity-60"
               >
                 <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <CreditCard className="h-4 w-4" />
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -177,7 +198,11 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
                       {t('activeBadge')}
                     </span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">{t('payWithHumoDesc')}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {lang === 'uz' ? 'Xavfsiz to\'lov sahifasi (CVV + 3D-Secure)'
+                      : lang === 'ru' ? 'Защищённая страница оплаты (CVV + 3D-Secure)'
+                      : 'Secure payment page (CVV + 3D-Secure)'}
+                  </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </button>
