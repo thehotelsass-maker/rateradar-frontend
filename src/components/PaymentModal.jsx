@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  X, CreditCard, ShieldCheck, Loader2, CheckCircle2, ChevronRight, Clock,
+  X, CreditCard, ShieldCheck, Loader2, CheckCircle2, ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -161,21 +161,26 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </button>
 
-              {/* Visa / Mastercard — TEZ ORADA (hozircha o'chirilgan) */}
-              <div className="w-full text-left rounded-xl border border-dashed p-4 flex items-center gap-3 opacity-60 cursor-not-allowed select-none">
-                <div className="w-9 h-9 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
-                  <Clock className="h-4 w-4" />
+              {/* Visa / Mastercard — FAOL (ATMOS bir xil karta oqimi bilan) */}
+              <button
+                onClick={() => setStep('card')}
+                disabled={loading}
+                className="w-full text-left rounded-xl border border-primary/40 bg-primary/[0.04] hover:bg-primary/[0.08] transition-colors p-4 flex items-center gap-3 disabled:opacity-60"
+              >
+                <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <CreditCard className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">Visa · Mastercard</span>
-                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 text-[9px] font-semibold">
-                      {t('comingSoon')}
+                    <span className="px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-600 text-[9px] font-semibold">
+                      {t('activeBadge')}
                     </span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">{t('visaSoonDesc')}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{t('payWithHumoDesc')}</div>
                 </div>
-              </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </button>
 
               {error && <p className="text-xs text-destructive">{error}</p>}
             </div>
@@ -284,7 +289,7 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
           <div className="px-6 py-3 border-t space-y-1 text-center text-[11px] text-muted-foreground">
             <div className="flex items-center justify-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5" />
-              ATMOS · Humo — Visa {t('comingSoon').toLowerCase()}
+              ATMOS · Humo · UzCard · Visa · Mastercard
             </div>
             <div>
               {t('supportPrompt')}{' '}

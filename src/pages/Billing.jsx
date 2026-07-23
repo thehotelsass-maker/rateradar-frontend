@@ -194,13 +194,10 @@ export default function Billing() {
                   </Button>
                 )}
 
-                {/* To'lov usullari: Humo faol · Visa tez orada */}
+                {/* To'lov usullari: Humo · Visa · Mastercard — hammasi faol */}
                 <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 font-medium">
-                    <span className="w-1 h-1 rounded-full bg-green-500" /> Humo
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-medium">
-                    Visa — {t('comingSoon').toLowerCase()}
+                    <span className="w-1 h-1 rounded-full bg-green-500" /> Humo · Visa · Mastercard
                   </span>
                 </div>
               </div>
