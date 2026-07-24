@@ -25,6 +25,7 @@ import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/layout/PublicFooter';
 import { SupportChat } from '@/components/SupportChat';
 import { PaymentModal } from '@/components/PaymentModal';
+import { LeadModal } from '@/components/LeadModal';
 import { Reveal, Stagger, StaggerItem } from '@/components/ui/motion';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { HotelServiceMockup } from '@/components/HotelServiceMockup';
@@ -55,6 +56,7 @@ export default function Landing() {
   const isAuthenticated = useAuth((s) => s.isAuthenticated());
   const [payPlan, setPayPlan] = useState(null); // { id, name, priceUzs }
   const [isYearly, setIsYearly] = useState(false);
+  const [showLead, setShowLead] = useState(false); // yillik reja bog'lanish formasi
 
   const steps = [
     { num: '01', title: t('step1Title'), desc: t('step1Desc') },
@@ -387,7 +389,7 @@ export default function Landing() {
                 size="lg"
                 onClick={() => {
                   if (isYearly) {
-                    window.open('https://t.me/rateradar_support', '_blank');
+                    setShowLead(true); // yillik reja — bog'lanish formasi
                   } else {
                     handlePlanCta();
                   }
@@ -411,6 +413,11 @@ export default function Landing() {
       {/* To'lov oynasi */}
       {payPlan && (
         <PaymentModal plan={payPlan} onClose={() => setPayPlan(null)} />
+      )}
+
+      {/* Yillik reja — bog'lanish formasi (info@thehotelsaas.com'ga yuboradi) */}
+      {showLead && (
+        <LeadModal plan="Yillik reja (pro_yearly)" onClose={() => setShowLead(false)} />
       )}
 
       {/* FAQ */}

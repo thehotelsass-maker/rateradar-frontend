@@ -243,6 +243,11 @@ export const paymentApi = {
     api.patch("/payments/auto-renew", { enabled }).then((r) => r.data),
 };
 
+export const leadApi = {
+  // Landing bog'lanish formasi — egasi pochtasiga (info@thehotelsaas.com) yuboradi.
+  submit: (data) => api.post("/leads", data).then((r) => r.data),
+};
+
 export const pricesApi = {
   rateShopper: (days = 7, channel = "all") =>
     api

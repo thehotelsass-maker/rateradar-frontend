@@ -301,7 +301,7 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
                 </label>
                 <Input
                   inputMode="numeric" autoComplete="cc-number"
-                  placeholder="4231 2000 9000 7831"
+                  placeholder="0000 0000 0000 0000"
                   value={card}
                   onChange={(e) => setCard(fmtCard(e.target.value))}
                   required
@@ -312,7 +312,8 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
                   {lang === 'ru' ? 'Имя владельца карты' : lang === 'en' ? 'Cardholder name' : 'Karta egasining ismi'}
                 </label>
                 <Input
-                  autoComplete="cc-name" placeholder="UMIDJON GAFFOROV"
+                  autoComplete="cc-name"
+                  placeholder={lang === 'ru' ? 'ИМЯ ФАМИЛИЯ' : lang === 'en' ? 'CARD HOLDER' : 'ISM FAMILIYA'}
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
                   required
@@ -366,11 +367,12 @@ export function PaymentModal({ plan, onClose, onSuccess }) {
               {error && <p className="text-xs text-destructive">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('payBtn') || 'To\'lash'}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : `${lang === 'ru' ? 'Оплатить' : lang === 'en' ? 'Pay' : 'To\'lash'} ${priceStr}`}
               </Button>
               <button type="button" onClick={() => { setError(''); setStep('method'); }}
                 className="w-full text-xs text-muted-foreground hover:text-foreground">
-                ← {t('back') || 'Orqaga'}
+                ← {lang === 'ru' ? 'Назад' : lang === 'en' ? 'Back' : 'Orqaga'}
               </button>
             </form>
           )}
