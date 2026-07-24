@@ -56,7 +56,7 @@ export default function Landing() {
   const isAuthenticated = useAuth((s) => s.isAuthenticated());
   const [payPlan, setPayPlan] = useState(null); // { id, name, priceUzs }
   const [isYearly, setIsYearly] = useState(false);
-  const [showLead, setShowLead] = useState(false); // yillik reja bog'lanish formasi
+  const [leadVariant, setLeadVariant] = useState(null); // null | 'demo' | 'yearly' — bog'lanish formasi
 
   const steps = [
     { num: '01', title: t('step1Title'), desc: t('step1Desc') },
@@ -162,8 +162,9 @@ export default function Landing() {
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild size="xl" variant="outline" className="rounded-full">
-                  <a href="#features">{t('ctaSecondary')}</a>
+                <Button size="xl" variant="outline" className="rounded-full"
+                  onClick={() => setLeadVariant('demo')}>
+                  {t('ctaSecondary')}
                 </Button>
               </div>
 
@@ -389,7 +390,7 @@ export default function Landing() {
                 size="lg"
                 onClick={() => {
                   if (isYearly) {
-                    setShowLead(true); // yillik reja — bog'lanish formasi
+                    setLeadVariant('yearly'); // yillik reja — bog'lanish formasi
                   } else {
                     handlePlanCta();
                   }
@@ -415,9 +416,13 @@ export default function Landing() {
         <PaymentModal plan={payPlan} onClose={() => setPayPlan(null)} />
       )}
 
-      {/* Yillik reja — bog'lanish formasi (info@thehotelsaas.com'ga yuboradi) */}
-      {showLead && (
-        <LeadModal plan="Yillik reja (pro_yearly)" onClose={() => setShowLead(false)} />
+      {/* Bog'lanish formasi (info@thehotelsaas.com'ga yuboradi) — demo yoki yillik */}
+      {leadVariant && (
+        <LeadModal
+          variant={leadVariant}
+          plan={leadVariant === 'demo' ? 'Demo so\'rovi' : 'Yillik reja (pro_yearly)'}
+          onClose={() => setLeadVariant(null)}
+        />
       )}
 
       {/* FAQ */}
