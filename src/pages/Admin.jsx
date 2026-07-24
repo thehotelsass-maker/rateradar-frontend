@@ -5,6 +5,7 @@ import {
   ExternalLink, AlertCircle, CheckCircle2, RefreshCw,
   Shield, Globe, Sparkles, MapPin, Activity, Send, Loader2,
   Lightbulb, Search, DollarSign, CreditCard,
+  Download, ChevronLeft, ChevronRight, Repeat,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -617,25 +618,39 @@ function tiyinToUzs(tiyin) {
   return (Number(tiyin || 0) / 100).toLocaleString('ru-RU');
 }
 
+// "YYYY-MM" → "Iyul 2026"
+const UZ_MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'];
+function monthLabel(ym) {
+  const [y, m] = String(ym).split('-').map(Number);
+  return `${UZ_MONTHS[m - 1] || m} ${y}`;
+}
+
 function TransactionsTab({ initial }) {
   const [data, setData] = useState(initial);
   const [status, setStatus] = useState('');
   const [plan, setPlan] = useState('');
   const [channel, setChannel] = useState('');
+  const [kind, setKind] = useState('');     // '' | 'manual' | 'renewal'
+  const [month, setMonth] = useState('');    // '' | 'YYYY-MM'
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  async function load() {
+  async function load(toPage = page) {
     setLoading(true);
     try {
       const res = await adminApi.transactions({
         limit: 50,
+        page: toPage,
         status: status || undefined,
         plan: plan || undefined,
         channel: channel || undefined,
+        kind: kind || undefined,
+        month: month || undefined,
         search: search.trim() || undefined,
       });
       setData(res);
+      setPage(toPage);
     } catch {
       /* xato — eski ma'lumot qoladi */
     } finally {
@@ -643,36 +658,94 @@ function TransactionsTab({ initial }) {
     }
   }
 
-  // Filtr o'zgarsa qayta yuklash (qidiruvdan tashqari — u Enter/tugma bilan)
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [status, plan, channel]);
+  // Filtr o'zgarsa 1-sahifadan qayta yuklash (qidiruvdan tashqari — u Enter/tugma bilan)
+  useEffect(() => { load(1); /* eslint-disable-next-line */ }, [status, plan, channel, kind, month]);
+
+  // CSV eksport — joriy filtr bo'yicha barcha sahifalarni yig'ib yuklaydi.
+  async function exportCsv() {
+    setLoading(true);
+    try {
+      const rows = [];
+      let p = 1, pages = 1;
+      do {
+        const res = await adminApi.transactions({
+          limit: 200, page: p,
+          status: status || undefined, plan: plan || undefined,
+          channel: channel || undefined, kind: kind || undefined,
+          month: month || undefined, search: search.trim() || undefined,
+        });
+        pages = res.pages || 1;
+        for (const t of res.transactions || []) {
+          rows.push([
+            new Date(t.createdAt).toLocaleString('uz-UZ'),
+            t.user?.name || '', t.user?.email || '',
+            t.plan, t.channel, t.isRenewal ? 'avto' : 'qo\'lda',
+            t.status, (t.amount / 100).toFixed(0), t.cardPan || '',
+            (t.errorMessage || '').replace(/[\n;,]/g, ' '),
+          ]);
+        }
+        p += 1;
+      } while (p <= pages && p <= 50);
+
+      const header = ['Sana', 'Ism', 'Email', 'Reja', 'Kanal', 'Tur', 'Holat', 'Summa (so\'m)', 'Karta', 'Xato'];
+      const csv = [header, ...rows]
+        .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';'))
+        .join('\n');
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tranzaksiyalar${month ? '-' + month : ''}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   if (!data) {
     return <div className="text-sm text-muted-foreground py-8 text-center">Yuklanmoqda...</div>;
   }
 
   const byStatus = data.summary?.byStatus || {};
+  const months = data.months || [];
+  // Tanlangan oy bo'lsa o'sha oyning tushumi, aks holda umumiy.
+  const revShown = month ? (data.filtered?.paidRevenue || 0) : (data.summary?.paidRevenue || 0);
+  const revLabel = month ? `${monthLabel(month)} tushumi` : 'Jami tushum (so\'m)';
   const inputCls = 'rounded-md border border-input bg-background px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40';
 
   return (
     <div className="space-y-4">
       {/* Summary kartalari */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <CountCard icon={DollarSign} label="Jami tushum (so'm)" value={tiyinToUzs(data.summary?.paidRevenue)} accent="green" />
-        <CountCard icon={CheckCircle2} label="To'langan" value={byStatus.paid?.count || 0} accent="primary" />
+        <CountCard icon={DollarSign} label={revLabel} value={tiyinToUzs(revShown)} accent="green" />
+        <CountCard icon={CheckCircle2} label="To'langan (jami)" value={byStatus.paid?.count || 0} accent="primary" />
         <CountCard icon={Loader2} label="OTP kutilmoqda" value={byStatus.otp_sent?.count || 0} />
         <CountCard icon={AlertCircle} label="Xato" value={byStatus.failed?.count || 0} />
       </div>
 
       {/* Filtrlar */}
       <div className="flex flex-wrap items-center gap-2">
+        <select className={inputCls} value={month} onChange={(e) => setMonth(e.target.value)}>
+          <option value="">Barcha oylar</option>
+          {months.map((m) => (
+            <option key={m.month} value={m.month}>{monthLabel(m.month)} ({m.count})</option>
+          ))}
+        </select>
         <select className={inputCls} value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">Barcha holatlar</option>
           {Object.entries(TXN_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+        <select className={inputCls} value={kind} onChange={(e) => setKind(e.target.value)}>
+          <option value="">Qo'lda + avto</option>
+          <option value="manual">Qo'lda to'lovlar</option>
+          <option value="renewal">Avto-yangilash</option>
         </select>
         <select className={inputCls} value={plan} onChange={(e) => setPlan(e.target.value)}>
           <option value="">Barcha rejalar</option>
           <option value="starter">Starter</option>
           <option value="pro">Pro</option>
+          <option value="pro_yearly">Pro (yillik)</option>
         </select>
         <select className={inputCls} value={channel} onChange={(e) => setChannel(e.target.value)}>
           <option value="">Barcha kanallar</option>
@@ -684,25 +757,42 @@ function TransactionsTab({ initial }) {
             className={inputCls}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && load()}
+            onKeyDown={(e) => e.key === 'Enter' && load(1)}
             placeholder="Email / ism / karta..."
           />
-          <Button size="sm" variant="outline" className="h-8" onClick={load} disabled={loading}>
+          <Button size="sm" variant="outline" className="h-8" onClick={() => load(1)} disabled={loading}>
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
           </Button>
         </div>
+        <Button size="sm" variant="outline" className="h-8 ml-auto gap-1.5" onClick={exportCsv} disabled={loading}>
+          <Download className="h-3.5 w-3.5" /> CSV
+        </Button>
       </div>
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Tranzaksiyalar ({data.total})</CardTitle>
+        <CardHeader className="pb-2 flex-row items-center justify-between">
+          <CardTitle className="text-sm">
+            Tranzaksiyalar ({data.total})
+            {month && <span className="text-muted-foreground font-normal"> · {monthLabel(month)}</span>}
+          </CardTitle>
+          {data.pages > 1 && (
+            <div className="flex items-center gap-2 text-xs">
+              <button className="p-1 rounded hover:bg-muted disabled:opacity-40" disabled={page <= 1 || loading} onClick={() => load(page - 1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="tabular-nums text-muted-foreground">{page} / {data.pages}</span>
+              <button className="p-1 rounded hover:bg-muted disabled:opacity-40" disabled={page >= data.pages || loading} onClick={() => load(page + 1)}>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="px-0">
           <div className="divide-y">
             {(data.transactions || []).map((t) => {
               const st = TXN_STATUS[t.status] || { label: t.status, cls: 'bg-muted text-muted-foreground' };
               return (
-                <div key={t._id} className="px-6 py-3 flex items-center gap-3">
+                <div key={t._id} className="px-6 py-3 flex items-center gap-3 hover:bg-muted/30 transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-sm truncate">{t.user?.name || '—'}</span>
@@ -710,6 +800,11 @@ function TransactionsTab({ initial }) {
                       <Badge variant="outline" className="text-[10px]">
                         {t.channel === 'invoice' ? 'Sahifa' : 'Karta'}
                       </Badge>
+                      {t.isRenewal && (
+                        <Badge className="text-[10px] border-transparent bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 gap-0.5">
+                          <Repeat className="h-2.5 w-2.5" /> Avto
+                        </Badge>
+                      )}
                       <Badge className={cn('text-[10px] border-transparent', st.cls)}>{st.label}</Badge>
                     </div>
                     <div className="text-[11px] text-muted-foreground truncate">
@@ -723,7 +818,7 @@ function TransactionsTab({ initial }) {
                       {tiyinToUzs(t.amount)} so'm
                     </div>
                     <div className="text-[10px] text-muted-foreground">
-                      {new Date(t.createdAt).toLocaleString()}
+                      {new Date(t.createdAt).toLocaleString('uz-UZ')}
                     </div>
                   </div>
                 </div>
