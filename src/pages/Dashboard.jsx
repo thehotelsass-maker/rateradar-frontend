@@ -33,6 +33,8 @@ import CategoryRatingsCard from '@/components/CategoryRatingsCard';
 import { hotelApi, pricesApi, aiApi } from '@/lib/api';
 import { useT, useLang } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
+import { PlanLock } from '@/components/PlanLock';
+import { allows } from '@/lib/planLimits';
 import { useFormatPrice, cn } from '@/lib/utils';
 import { getCache, setCache } from '@/lib/clientCache';
 
@@ -643,7 +645,14 @@ export default function Dashboard() {
       {/* AI Maslahatchi — narx/statistikaga qarab tavsiyalar (xizmat qo'shish,
           hotel-service'ga ulanish va h.k.). Competitors sahifasi bilan bir xil
           kesh kalitidan (`ai:<id>:<lang>`) foydalanadi. */}
-      <AiAdvisor hotel={hotel} />
+      <PlanLock
+        locked={!allows(user, 'ai')}
+        message={lang === 'uz' ? 'AI Maslahatchi Pro va Business tariflarida'
+          : lang === 'ru' ? 'AI-советник доступен в Pro и Business'
+          : 'AI Advisor is on Pro and Business plans'}
+      >
+        <AiAdvisor hotel={hotel} locked={!allows(user, 'ai')} />
+      </PlanLock>
 
     </div>
   );

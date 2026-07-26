@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import {
   Plus, MapPin, Star, Trash2, Loader2, Building2, X,
   RefreshCw, DollarSign, Clock,
   ChevronRight, BarChart2, Mail, Map, List,
-  MessageSquare, ExternalLink, DownloadCloud, Link2,
+  MessageSquare, ExternalLink, DownloadCloud, Link2, Lock,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -19,7 +19,10 @@ import { SearchSelect } from '@/components/ui/search-select';
 import CompetitorMap from '@/components/CompetitorMap';
 import AiAdvisor from '@/components/AiAdvisor';
 import { hotelApi, searchApi } from '@/lib/api';
-import { useT } from '@/lib/i18n';
+import { useT, useLang } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
+import { limitsFor, allows } from '@/lib/planLimits';
+import { PlanLock } from '@/components/PlanLock';
 import { cn, useFormatPrice } from '@/lib/utils';
 import { getOtaBrand } from '@/lib/otaBrands';
 import { getCache, setCache, clearCache, clearCachePrefix } from '@/lib/clientCache';
@@ -72,7 +75,9 @@ const CHANNEL_ORDER = [
   'google', 'googlehotels', 'priceline', 'viocom', 'edreams', 'tripadvisor',
 ];
 
-function collectChannelPrices(latestPrices) {
+// allowedChannels: null = barcha kanal; massiv = faqat shu kanallar (Starter:
+// booking+expedia). Baza baribir hammasini saqlaydi — bu faqat KO'RSATISH filtri.
+function collectChannelPrices(latestPrices, allowedChannels = null) {
   if (!latestPrices) return [];
   // Backenddan JSON sifatida keladi — har doim plain object.
   // (`Map` lucide-react ikon nomi bilan soyalangani uchun `instanceof Map` ishlatmaymiz.)
@@ -81,9 +86,14 @@ function collectChannelPrices(latestPrices) {
       ? [...latestPrices.entries()]
       : Object.entries(latestPrices);
 
+  const allow = allowedChannels
+    ? new Set(allowedChannels.map((c) => String(c).toLowerCase()))
+    : null;
   const out = entries
     // Google aggregator narxini chiplarda ko'rsatmaymiz — boshqa OTA'larniki.
     .filter(([key, v]) => Number(v) > 0 && key !== 'google' && key !== 'googlehotels')
+    // Tarif kanal filtri (Starter: faqat booking+expedia).
+    .filter(([key]) => !allow || allow.has(String(key).toLowerCase()))
     .map(([key, price]) => ({
       key,
       label: CHANNEL_LABEL[key] || key,
@@ -763,6 +773,13 @@ function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
 // ─── Main ─────────────────────────────────────────────
 export default function Competitors() {
   const t = useT();
+  const lang = useLang((s) => s.lang);
+  const user = useAuth((s) => s.user);
+  const navigate = useNavigate();
+  // Tarif chegarasi: raqiblar soni (Starter 3). 0 = cheksiz.
+  const maxComp = limitsFor(user).maxCompetitors;
+  // Ko'rsatiladigan OTA kanallar (Starter: booking+expedia). null = hammasi.
+  const planChannels = limitsFor(user).channels;
   const { hotel } = useOutletContext();
   const [competitors, setCompetitors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -985,6 +1002,15 @@ export default function Competitors() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, competitors.length]);
 
+  // Tarif chegarasi bo'yicha ko'rsatiladigan raqiblar (Starter 3).
+  const overLimit = maxComp > 0 && competitors.length > maxComp;
+  const hiddenCount = overLimit ? competitors.length - maxComp : 0;
+  const visibleCompetitors = maxComp > 0 ? competitors.slice(0, maxComp) : competitors;
+  const atAddLimit = maxComp > 0 && competitors.length >= maxComp;
+  const limitMsg = lang === 'uz' ? `Starter tarifida ${maxComp} ta raqib kuzatiladi. Ko'proq uchun tarifni ko'taring.`
+    : lang === 'ru' ? `В тарифе Starter — ${maxComp} конкурента. Повысьте тариф для большего.`
+    : `Starter plan tracks ${maxComp} competitors. Upgrade for more.`;
+
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Header */}
@@ -1034,10 +1060,16 @@ export default function Competitors() {
             </Button>
           )}
 
-          <Button onClick={() => setShowAdd(!showAdd)} size="sm">
-            {showAdd ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {showAdd ? t('cancel') : t('addCompetitor')}
-          </Button>
+          {atAddLimit && !showAdd ? (
+            <Button size="sm" variant="outline" onClick={() => navigate('/billing')} title={limitMsg}>
+              <Lock className="h-4 w-4" /> {t('addCompetitor')}
+            </Button>
+          ) : (
+            <Button onClick={() => setShowAdd(!showAdd)} size="sm">
+              {showAdd ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              {showAdd ? t('cancel') : t('addCompetitor')}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1224,7 +1256,7 @@ export default function Competitors() {
                     ...(hotel.currentPrice > 0
                       ? [{ label: 'mening narxim', price: Math.round(hotel.currentPrice) }]
                       : []),
-                    ...collectChannelPrices(ownChannelPrices),
+                    ...collectChannelPrices(ownChannelPrices, planChannels),
                   ]}
                   isOwn
                 />
@@ -1241,7 +1273,7 @@ export default function Competitors() {
                   </p>
                 </div>
               ) : (
-                competitors.map((c, i) => (
+                visibleCompetitors.map((c, i) => (
                   <motion.div
                     key={c._id}
                     variants={fadeInUp}
@@ -1255,7 +1287,7 @@ export default function Competitors() {
                       distanceKm={c.distanceKm}
                       stars={c.stars}
                       rating={c.rating}
-                      channels={collectChannelPrices(c.latestPrices)}
+                      channels={collectChannelPrices(c.latestPrices, planChannels)}
                       onClick={() => setDetailComp(c)}
                       onRefresh={() => handleFetchPrice(c._id)}
                       onFetchHasData={() => handleFetchHasData(c._id)}
@@ -1271,6 +1303,25 @@ export default function Competitors() {
         </div>
       )}
 
+      {/* Tarif chegarasi — yashirilgan raqiblar (Starter) */}
+      {overLimit && (
+        <div className="rounded-xl border border-primary/30 bg-primary/[0.04] px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 text-sm">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Lock className="h-4 w-4" />
+            </div>
+            <span>
+              {lang === 'uz' ? `Yana ${hiddenCount} ta raqib bor — Pro tarifida ko'rinadi.`
+                : lang === 'ru' ? `Ещё ${hiddenCount} конкурента — доступны в Pro.`
+                : `${hiddenCount} more competitors — visible on Pro.`}
+            </span>
+          </div>
+          <Button size="sm" onClick={() => navigate('/billing')}>
+            {lang === 'uz' ? 'Tarifni ko\'tarish' : lang === 'ru' ? 'Повысить тариф' : 'Upgrade'} →
+          </Button>
+        </div>
+      )}
+
       {/* Footer hints */}
       {competitors.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-2 items-center justify-center text-[11px] text-muted-foreground/60">
@@ -1281,8 +1332,17 @@ export default function Competitors() {
         </div>
       )}
 
-      {/* AI maslahatchi — sahifa tagida */}
-      {competitors.length > 0 && <AiAdvisor hotel={hotel} />}
+      {/* AI maslahatchi — sahifa tagida (Starter'da qulf) */}
+      {competitors.length > 0 && (
+        <PlanLock
+          locked={!allows(user, 'ai')}
+          message={lang === 'uz' ? 'AI Maslahatchi Pro va Business tariflarida'
+            : lang === 'ru' ? 'AI-советник доступен в Pro и Business'
+            : 'AI Advisor is on Pro and Business plans'}
+        >
+          <AiAdvisor hotel={hotel} locked={!allows(user, 'ai')} />
+        </PlanLock>
+      )}
 
       {/* Detail Modal */}
       {detailComp && (

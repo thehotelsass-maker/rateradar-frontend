@@ -6,6 +6,9 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useT, useLang } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
+import { allows } from '@/lib/planLimits';
+import { PlanLock } from '@/components/PlanLock';
 import { reviewApi, hotelApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { getCache, setCache } from '@/lib/clientCache';
@@ -65,6 +68,7 @@ function topicChipClass(sentiment) {
 export default function Reviews() {
   const t = useT();
   const lang = useLang((s) => s.lang);
+  const user = useAuth((s) => s.user);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -216,8 +220,16 @@ export default function Reviews() {
         <div className="text-xs text-muted-foreground -mt-2 ml-1">{scrapeMsg}</div>
       )}
 
-      {/* Sharhlar Score Board — obro' paneli (ball, KPI, trend, platforma donut) */}
-      <ReviewsScoreBoard reviews={allReviews} stats={stats} total={total} lang={lang} />
+      {/* Sharhlar Score Board — obro' paneli (ball, KPI, trend, platforma donut).
+          Analitika Starter'da qulf (reviewsAnalytics) — sharhlar ro'yxati ochiq qoladi. */}
+      <PlanLock
+        locked={!allows(user, 'reviewsAnalytics')}
+        message={lang === 'uz' ? 'Sharhlar tahlili Pro va Business tariflarida'
+          : lang === 'ru' ? 'Аналитика отзывов доступна в Pro и Business'
+          : 'Reviews analytics is on Pro and Business plans'}
+      >
+        <ReviewsScoreBoard reviews={allReviews} stats={stats} total={total} lang={lang} />
+      </PlanLock>
 
       {/* Bir bosishda barcha platformadan sharh olish — har birini alohida
           bosmaslik uchun. Kartalar ustida katta, ko'zga tashlanadigan tugma. */}

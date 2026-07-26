@@ -22,7 +22,7 @@ import { getCache, setCache } from '@/lib/clientCache';
  *   hotel    — { _id, ... } aktiv mehmonxona
  *   autoLoad — birinchi ochilishda avtomatik yuklash (default true)
  */
-export default function AiAdvisor({ hotel, autoLoad = true }) {
+export default function AiAdvisor({ hotel, autoLoad = true, locked = false }) {
   const lang = useLang((s) => s.lang);
   const formatPrice = useFormatPrice();
   const L = (uz, ru, en) => (lang === 'uz' ? uz : lang === 'ru' ? ru : en);
@@ -60,11 +60,13 @@ export default function AiAdvisor({ hotel, autoLoad = true }) {
   );
 
   // Birinchi ochilishda bir martagina avtomatik yuklash (keshdan yoki AI'dan).
+  // Qulf (Starter) bo'lsa — so'rov YUBORMAYMIZ (403 noise bo'lmasin).
   useEffect(() => {
+    if (locked) return;
     if (!autoLoad || loadedRef.current || !hotel?._id) return;
     loadedRef.current = true;
     loadAi();
-  }, [autoLoad, hotel?._id, loadAi]);
+  }, [autoLoad, hotel?._id, loadAi, locked]);
 
   const recs = data?.recommendations || [];
 
@@ -91,7 +93,20 @@ export default function AiAdvisor({ hotel, autoLoad = true }) {
       </div>
 
       <CardContent className="p-5">
-        {loading && !recs.length ? (
+        {locked ? (
+          // Qulf ostidagi namuna kontent (PlanLock buni blur qiladi)
+          <div className="space-y-3">
+            {[
+              { t: L('Narxni oshiring — $92', 'Поднимите цену — $92', 'Raise price — $92'), d: L('Raqiblaringiz narxidan pastroqsiz — daromadni oshiring.', 'Вы ниже конкурентов — увеличьте доход.', 'You are below competitors — boost revenue.') },
+              { t: L('Booking narxini moslang — $78', 'Скорректируйте цену Booking — $78', 'Adjust Booking price — $78'), d: L('Hafta oxiri talab yuqori — narxni ko\'taring.', 'Высокий спрос на выходных — поднимите цену.', 'Weekend demand is high — increase price.') },
+            ].map((r, i) => (
+              <div key={i} className="rounded-xl border border-border/60 p-4">
+                <div className="text-sm font-medium">{r.t}</div>
+                <div className="text-xs text-muted-foreground mt-1">{r.d}</div>
+              </div>
+            ))}
+          </div>
+        ) : loading && !recs.length ? (
           <div className="py-10 flex flex-col items-center gap-2">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
             <p className="text-xs text-muted-foreground">

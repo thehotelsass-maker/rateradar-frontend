@@ -9,6 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useT, useLang } from '@/lib/i18n';
 import { aiApi } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { allows } from '@/lib/planLimits';
+import { PlanLock } from '@/components/PlanLock';
 
 const PRIORITY_COLOR = { 1: 'text-red-500', 2: 'text-yellow-500', 3: 'text-green-500' };
 const SENTIMENT_CONFIG = {
@@ -27,6 +30,8 @@ function PriorityIcon({ priority }) {
 export default function AIInsights() {
   const t = useT();
   const lang = useLang((s) => s.lang);
+  const user = useAuth((s) => s.user);
+  const aiLocked = !allows(user, 'ai');
 
   const [aiEnabled, setAiEnabled] = useState(null);
   const [priceData, setPriceData] = useState(null);
@@ -168,13 +173,20 @@ export default function AIInsights() {
         <p className="text-sm text-muted-foreground mt-1">{t('phase3AITitle')}</p>
       </div>
 
-      {error && (
+      {error && !aiLocked && (
         <div className="flex items-center gap-2 text-sm text-red-500 bg-red-50 dark:bg-red-950/30 px-4 py-3 rounded-lg">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
       )}
 
+      <PlanLock
+        locked={aiLocked}
+        message={lang === 'uz' ? 'AI Tahlil Pro va Business tariflarida'
+          : lang === 'ru' ? 'AI-анализ доступен в Pro и Business'
+          : 'AI Analysis is on Pro and Business plans'}
+      >
+      <div className="space-y-6">
       {/* AI YORDAMCHI CHAT — istalgan travel/hotel savoli, hotel konteksti bilan */}
       <Card variant="glass" className="hover-lift">
         <CardHeader className="pb-3">
@@ -449,6 +461,8 @@ export default function AIInsights() {
           )}
         </CardContent>
       </Card>
+      </div>
+      </PlanLock>
     </div>
   );
 }
