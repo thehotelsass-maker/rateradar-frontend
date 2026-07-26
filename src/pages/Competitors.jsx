@@ -388,6 +388,10 @@ function ChannelLinksEditor({ comp, onPriceFetched }) {
 // ─── Detail Modal ─────────────────────────────────────
 function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
   const formatPrice = useFormatPrice();
+  const lang = useLang((s) => s.lang);
+  const user = useAuth((s) => s.user);
+  const navigate = useNavigate();
+  const planChannels = limitsFor(user).channels; // null=hammasi; ['booking','expedia']
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
@@ -421,11 +425,16 @@ function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
     }
   };
 
-  const otaEntries = data
+  const allOtaEntries = data
     ? Object.entries(data.otaPrices || {})
         .filter(([, v]) => v > 0)
         .sort(([, a], [, b]) => a - b)
     : [];
+  // Tarif kanal filtri (Starter: booking+expedia). Kalit "bookingcom" → "booking".
+  const chOk = (key) => !planChannels
+    || planChannels.some((a) => String(key).toLowerCase().replace(/[^a-z]/g, '').startsWith(a));
+  const otaEntries = allOtaEntries.filter(([key]) => chOk(key));
+  const otaHidden = planChannels ? allOtaEntries.length - otaEntries.length : 0;
 
   const hasPriceHistory = data?.history?.length > 1;
   const hasRatingHistory = data?.ratingHistory?.length > 1;
@@ -561,6 +570,19 @@ function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
                         Quyidagi tugmani bosib narxlarni oling
                       </p>
                     </div>
+                  )}
+
+                  {/* Tarif chegarasi — yashirilgan kanallar (Starter) */}
+                  {otaHidden > 0 && (
+                    <button
+                      onClick={() => { onClose?.(); navigate('/billing'); }}
+                      className="mt-2 w-full flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/[0.04] px-4 py-3 text-xs font-medium text-primary hover:bg-primary/[0.08] transition-colors"
+                    >
+                      <Lock className="h-3.5 w-3.5" />
+                      {lang === 'uz' ? `Yana ${otaHidden} ta kanaldan narx bor — ko'rish uchun Pro tarifiga o'ting`
+                        : lang === 'ru' ? `Ещё ${otaHidden} каналов с ценами — доступны в Pro`
+                        : `${otaHidden} more channels have prices — upgrade to Pro`}
+                    </button>
                   )}
 
                   {/* Kanal havolalari — xato bo'lsa foydalanuvchi o'zi tuzatadi,

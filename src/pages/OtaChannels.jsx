@@ -1,12 +1,15 @@
 ﻿﻿﻿﻿﻿﻿import { useState, useEffect } from 'react';
 import {
   RefreshCw, AlertCircle, Settings2, TrendingDown, TrendingUp,
-  X, Loader2, CheckCircle2, AlertTriangle, XCircle, Download,
+  X, Loader2, CheckCircle2, AlertTriangle, XCircle, Download, Lock,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useT, useLang } from '@/lib/i18n';
+import { useAuth } from '@/lib/auth';
+import { limitsFor } from '@/lib/planLimits';
 import { hotelApi } from '@/lib/api';
 import { cn, formatPrice } from '@/lib/utils';
 import { getCache, setCache } from '@/lib/clientCache';
@@ -44,6 +47,10 @@ function statusLabel(status, lang) {
 export default function OtaChannels() {
   const t = useT();
   const lang = useLang((s) => s.lang);
+  const user = useAuth((s) => s.user);
+  const navigate = useNavigate();
+  // Tarif kanal filtri (Starter: booking+expedia). null = hammasi.
+  const planChannels = limitsFor(user).channels;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -75,9 +82,16 @@ export default function OtaChannels() {
   // SerpAPI qaytargan barcha kanallarni ko'rsatamiz — hech qanday hard-coded
   // ro'yxat yo'q. Google Hotels qaysi OTA'larni qaytarsa, hammasi narxi bilan
   // chiziladi (arzondan qimmatga).
-  const channels = (data?.channels || [])
+  const allChannels = (data?.channels || [])
     .filter((c) => c.price > 0)
     .sort((a, b) => (a.price || 0) - (b.price || 0));
+
+  // Tarif filtri: Starter'da faqat booking+expedia KO'RSATILADI (baza hammasini
+  // saqlaydi). "Booking.com" → "booking", "Expedia" → "expedia".
+  const normKey = (s) => String(s || '').toLowerCase().replace(/\.com$/, '').replace(/[^a-z]/g, '');
+  const chAllowed = (ch) => !planChannels || planChannels.includes(normKey(ch.source));
+  const channels = allChannels.filter(chAllowed);
+  const hiddenCount = planChannels ? allChannels.length - channels.length : 0;
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -146,6 +160,25 @@ export default function OtaChannels() {
                   />
                 </div>
               ))}
+
+              {/* Tarif chegarasi — yashirilgan kanallar (Starter) */}
+              {hiddenCount > 0 && (
+                <div className="px-5 py-4 flex items-center justify-between gap-3 flex-wrap bg-primary/[0.03]">
+                  <div className="flex items-center gap-2.5 text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Lock className="h-4 w-4" />
+                    </div>
+                    <span>
+                      {lang === 'uz' ? `Yana ${hiddenCount} ta kanal bor (Agoda, Trip.com, Priceline...) — Pro tarifida ko'rinadi.`
+                        : lang === 'ru' ? `Ещё ${hiddenCount} каналов (Agoda, Trip.com...) — доступны в Pro.`
+                        : `${hiddenCount} more channels (Agoda, Trip.com...) — visible on Pro.`}
+                    </span>
+                  </div>
+                  <Button size="sm" onClick={() => navigate('/billing')}>
+                    {lang === 'uz' ? 'Pro tarifiga o\'tish' : lang === 'ru' ? 'Перейти на Pro' : 'Upgrade to Pro'} →
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
