@@ -132,7 +132,14 @@ export default function CompetitorMap({
     // Grid/flex ichida init paytida konteyner kengligi 0 bo'lishi mumkin —
     // Leaflet o'lchamni noto'g'ri hisoblab, plitkalarni yuklamaydi (bo'sh
     // kulrang xarita). invalidateSize + ResizeObserver bilan tuzatamiz.
-    const invalidate = () => map.invalidateSize();
+    // Konteyner YASHIRIN yoki 0-o'lchamli bo'lsa invalidateSize chaqirmaymiz —
+    // aks holda Leaflet zoom/pane'da "_leaflet_pos undefined" xatosini beradi.
+    // Har ehtimolga qarshi try/catch bilan o'tkinchi xatoni yutib yuboramiz.
+    const invalidate = () => {
+      const el = containerRef.current;
+      if (!mapRef.current || !el || el.offsetWidth === 0 || el.offsetHeight === 0) return;
+      try { map.invalidateSize(); } catch { /* leaflet o'tkinchi xatosi */ }
+    };
     const raf = requestAnimationFrame(invalidate);
     const t = setTimeout(invalidate, 250);
     const ro = new ResizeObserver(invalidate);

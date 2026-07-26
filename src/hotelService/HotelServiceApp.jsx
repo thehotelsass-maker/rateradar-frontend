@@ -29,6 +29,7 @@ function SSOBridge() {
   const { isAuth, initSession } = useHotel();
   const navigate = useNavigate();
   const [error, setError] = useState(false);
+  const [planRequired, setPlanRequired] = useState(false);
 
   useEffect(() => {
     if (isAuth) {
@@ -41,8 +42,13 @@ function SSOBridge() {
         const { data } = await hsApi.post("/hotel/auth", { token: sso.token });
         initSession(data.token, data.hotel);
         navigate("/hotel-service/dashboard", { replace: true });
-      } catch {
-        setError(true);
+      } catch (err) {
+        // 403 PLAN_REQUIRED — Starter tarif: Hotel Service mavjud emas.
+        if (err?.response?.status === 403 && err.response.data?.code === "PLAN_REQUIRED") {
+          setPlanRequired(true);
+        } else {
+          setError(true);
+        }
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -50,8 +56,25 @@ function SSOBridge() {
 
   return (
     <div className="flex items-center justify-center py-24">
-      <div className="text-center">
-        {error ? (
+      <div className="text-center max-w-sm px-6">
+        {planRequired ? (
+          <>
+            <div className="text-4xl mb-3">🔒</div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+              Hotel Service — Pro va Business tariflarida
+            </h2>
+            <p className="text-sm text-gray-500 mb-5">
+              Mehmonlar buyurtmalari, Telegram bot va xodimlar boshqaruvi
+              Pro yoki Business tarifida ochiladi. Starter tarifida mavjud emas.
+            </p>
+            <button
+              onClick={() => navigate("/billing")}
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
+            >
+              Tarifni ko'tarish →
+            </button>
+          </>
+        ) : error ? (
           <>
             <div className="text-4xl mb-4">⚠️</div>
             <p className="text-sm text-gray-500">

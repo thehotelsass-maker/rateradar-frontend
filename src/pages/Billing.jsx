@@ -8,20 +8,36 @@ import { Badge } from '@/components/ui/badge';
 import { PaymentModal } from '@/components/PaymentModal';
 import { isPlanActive } from '@/components/ProtectedRoute';
 import { useAuth } from '@/lib/auth';
-import { useT } from '@/lib/i18n';
+import { useT, useLang } from '@/lib/i18n';
 import { paymentApi } from '@/lib/api';
 
-// Reja imkoniyatlari i18n kalitlari (Landing bilan bir xil).
-const PLAN_FEATURES = {
-  free: ['planFreeFeat1', 'planFreeFeat2', 'planFreeFeat3', 'planFreeFeat4'],
-  starter: ['planStarterFeat1', 'planStarterFeat2', 'planStarterFeat3', 'planStarterFeat4'],
-  pro: ['planProFeat1', 'planProFeat2', 'planProFeat3', 'planProFeat4'],
-  pro_yearly: ['planProFeat1', 'planProFeat2', 'planProFeat3', 'planProFeat4'],
+const PLAN_TITLE = {
+  free: 'planFreeTitle', starter: 'Starter', pro: 'Pro', business: 'Business',
+  pro_yearly: 'Pro',
 };
-const PLAN_TITLE = { free: 'planFreeTitle', starter: 'planStarterTitle', pro: 'planProTitle', pro_yearly: 'planProTitle' };
+
+// Tarif imkoniyatlari — qisqa ro'yxat (Landing bilan mos), 3 tilda.
+const TIER_FEATS = {
+  uz: {
+    starter: ['1 mehmonxona', '3 raqib kuzatuvi', 'Faqat Booking.com', '1 TV kiosk', 'Hotel Service yo‘q'],
+    pro: ['1 mehmonxona', '10 raqib', 'Barcha OTA + AI tavsiya', 'Hotel Service (bot)', '5 TV kiosk'],
+    business: ['5 mehmonxonagacha', 'Cheksiz raqib', 'AI + chuqur tahlil', 'Hotel Service (ko‘p filial)', 'Shaxsiy menejer'],
+  },
+  ru: {
+    starter: ['1 отель', '3 конкурента', 'Только Booking.com', '1 TV-киоск', 'Без Hotel Service'],
+    pro: ['1 отель', '10 конкурентов', 'Все OTA + AI-советы', 'Hotel Service (бот)', '5 TV-киосков'],
+    business: ['До 5 отелей', 'Без ограничений', 'AI + глубокий анализ', 'Hotel Service (мультифилиал)', 'Персональный менеджер'],
+  },
+  en: {
+    starter: ['1 hotel', '3 competitors', 'Booking.com only', '1 TV kiosk', 'No Hotel Service'],
+    pro: ['1 hotel', '10 competitors', 'All OTA + AI advice', 'Hotel Service (bot)', '5 TV kiosks'],
+    business: ['Up to 5 hotels', 'Unlimited competitors', 'AI + deep analysis', 'Hotel Service (multi-branch)', 'Dedicated manager'],
+  },
+};
 
 export default function Billing() {
   const t = useT();
+  const lang = useLang((s) => s.lang);
   const user = useAuth((s) => s.user);
   const refreshUser = useAuth((s) => s.refresh);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -115,11 +131,12 @@ export default function Billing() {
   const planActive = isPlanActive(user);
   const paywall = searchParams.get('paywall') === '1' || !planActive;
 
-  // Sotib olinadigan rejalar: oylik (pro) + yillik (pro_yearly, 2 oy bepul).
-  // Eski backend starter qaytarsa — u ko'rsatilmaydi.
+  // Sotib olinadigan 3 tarif (starter/pro/business) — backend PURCHASABLE_PLANS.
   const allPlans = data?.plans || [];
-  const paidPlans = allPlans.filter((p) => p.id === 'pro' || p.id === 'pro_yearly');
-  const cards = paidPlans.length ? paidPlans : allPlans.slice(0, 1);
+  const ORDER = { starter: 0, pro: 1, business: 2 };
+  const cards = allPlans
+    .filter((p) => p.id in ORDER)
+    .sort((a, b) => ORDER[a.id] - ORDER[b.id]);
 
   return (
     <div className="space-y-6 animate-fade-in max-w-4xl">
@@ -227,29 +244,27 @@ export default function Billing() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl">
           {cards.map((p) => {
-            const yearly = (p.durationDays || 30) >= 365;
-            const period = yearly ? t('perYear') : t('perMonth');
-            const isCurrent = !yearly && p.id === currentPlan && planActive;
+            const period = t('perMonth');
+            const popular = p.id === 'pro';
+            const isCurrent = p.id === currentPlan && planActive;
+            const feats = (TIER_FEATS[lang] || TIER_FEATS.uz)[p.id] || [];
             return (
               <div
                 key={p.id}
                 className={`relative rounded-xl border p-6 flex flex-col bg-card ${
-                  yearly
-                    ? 'border-primary shadow-lg shadow-primary/10'
-                    : 'border-primary/40'
+                  popular
+                    ? 'border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/10'
+                    : 'border-border/70'
                 }`}
               >
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-                  <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-medium whitespace-nowrap">
+                  <span className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap ${
+                    popular ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}>
                     {p.name}
                   </span>
-                  {yearly && (
-                    <span className="px-2 py-1 rounded-full bg-green-500 text-white text-[10px] font-semibold whitespace-nowrap">
-                      {t('yearlySaveBadge')}
-                    </span>
-                  )}
                 </div>
 
                 <div className="mt-2 flex items-baseline gap-1.5">
@@ -263,14 +278,19 @@ export default function Billing() {
                 </div>
 
                 <ul className="mt-5 space-y-2 flex-1">
-                  {(PLAN_FEATURES[p.id] || []).map((fk) => (
-                    <li key={fk} className="flex items-start gap-2 text-sm">
-                      <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                      </div>
-                      <span>{t(fk)}</span>
-                    </li>
-                  ))}
+                  {feats.map((f, i) => {
+                    const neg = /yo['‘]q|Без|No /.test(f);
+                    return (
+                      <li key={i} className={`flex items-start gap-2 text-[13px] ${neg ? 'text-muted-foreground/60' : ''}`}>
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                          neg ? 'bg-muted text-muted-foreground/60' : 'bg-primary/10 text-primary'
+                        }`}>
+                          <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                        </div>
+                        <span>{f}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 {isCurrent ? (
@@ -280,7 +300,7 @@ export default function Billing() {
                 ) : (
                   <Button
                     className="mt-6 w-full"
-                    variant={yearly ? 'default' : 'outline'}
+                    variant={popular ? 'default' : 'outline'}
                     disabled={data && !data.atmosReady}
                     onClick={() =>
                       setPayPlan({

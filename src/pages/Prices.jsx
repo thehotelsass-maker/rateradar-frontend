@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { RefreshCw, Star, MapPin, ArrowDown, ArrowUp, Minus, Download, Loader2, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import CountUp from '@/components/ui/CountUp';
 import { Reveal } from '@/components/ui/motion';
 import PriceRefreshProgress from '@/components/PriceRefreshProgress';
+import { onPriceProgress } from '@/lib/socket';
 import { cellPop } from '@/lib/animations';
 import { useT, useLang } from '@/lib/i18n';
 import { pricesApi } from '@/lib/api';
@@ -287,46 +288,68 @@ export default function Prices() {
 
   // SerpAPI bulk — bitta yugurishda o'z mehmonxona + barcha raqiblar uchun
   // BARCHA OTA kanallar (Booking, Agoda, Expedia, Hotels.com, Trip.com…) yangilanadi.
+  // Yakuniy natijani socket 'price:progress' {stage:'complete'} orqali kutamiz —
+  // backend HTTP so'rovni darrov yopadi (nginx timeout oldini olish).
+  const refreshCleanupRef = useRef(null);
+
   async function refreshAllChannels() {
     setRefreshing(true);
     setRefreshResult(null);
     setError('');
     setShowProgress(true); // jonli animatsiyali panel
+
+    if (refreshCleanupRef.current) { refreshCleanupRef.current(); refreshCleanupRef.current = null; }
+
+    const finalize = async (summary) => {
+      setRefreshResult({
+        channel: lang === 'uz' ? 'Barcha kanallar' : 'All channels',
+        own: {
+          found: (summary?.own?.channels || 0) > 0,
+          price: summary?.own?.otaPrices?.[0]?.price || 0,
+          message: summary?.own?.message,
+        },
+        competitors: {
+          total: summary?.competitors?.total || 0,
+          matched: summary?.competitors?.matched || 0,
+          failed: summary?.competitors?.failed || 0,
+          message: (summary?.competitors?.failed || 0) > 0
+            ? (lang === 'uz'
+                ? `${summary.competitors.failed} ta raqibda narx topilmadi`
+                : `${summary.competitors.failed} competitors had no price`)
+            : '',
+        },
+      });
+      await loadCompetitors(days, channel);
+      setRefreshing(false);
+    };
+
+    const off = onPriceProgress((p) => {
+      if (!p?.stage) return;
+      if (p.stage === 'complete') { cleanup(); finalize(p.summary); }
+      else if (p.stage === 'error') { cleanup(); setRefreshing(false); setError(p.message || 'Refresh xatosi'); }
+    });
+    const timer = setTimeout(() => { cleanup(); setRefreshing(false); }, 6 * 60 * 1000);
+    function cleanup() { off?.(); clearTimeout(timer); refreshCleanupRef.current = null; }
+    refreshCleanupRef.current = cleanup;
+
     try {
       const res = await pricesApi.refreshAll();
-      // Kunlik throttle — bugun yangilangan, yangi so'rov ketmadi.
-      if (res.throttled) {
+      // Kunlik throttle — bugun yangilangan, yangi so'rov ketmadi (darrov qaytadi).
+      if (res?.throttled) {
+        cleanup();
         setShowProgress(false);
+        setRefreshing(false);
         setError(lang === 'uz' ? 'Narxlar bugun allaqachon yangilangan — hali o\'zgarmadi.'
           : lang === 'ru' ? 'Цены сегодня уже обновлялись — пока без изменений.'
           : 'Prices were already refreshed today — no changes yet.');
         await loadCompetitors(days, channel);
         return;
       }
-      // refreshResult shaklini moslashtirib qo'yamiz (eski UI bilan mos)
-      setRefreshResult({
-        channel: lang === 'uz' ? 'Barcha kanallar' : 'All channels',
-        own: {
-          found: res.own.channels > 0,
-          price: res.own.otaPrices?.[0]?.price || 0,
-          message: res.own.message,
-        },
-        competitors: {
-          total: res.competitors.total,
-          matched: res.competitors.matched,
-          failed: res.competitors.failed,
-          message: res.competitors.failed > 0
-            ? (lang === 'uz'
-                ? `${res.competitors.failed} ta raqibda narx topilmadi`
-                : `${res.competitors.failed} competitors had no price`)
-            : '',
-        },
-      });
-      await loadCompetitors(days, channel);
+      // res.started === true — socket 'complete' kutiladi.
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Refresh xatosi');
-    } finally {
+      cleanup();
       setRefreshing(false);
+      setError(err.response?.data?.error || err.message || 'Refresh xatosi');
     }
   }
 

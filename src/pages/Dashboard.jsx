@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import CountUp from '@/components/ui/CountUp';
 import { Stagger, StaggerItem, Reveal } from '@/components/ui/motion';
 import PriceRefreshProgress from '@/components/PriceRefreshProgress';
+import { onPriceProgress } from '@/lib/socket';
 import InstantSnapshotCard from '@/components/InstantSnapshotCard';
 import AiAdvisor from '@/components/AiAdvisor';
 import CategoryRatingsCard from '@/components/CategoryRatingsCard';
@@ -128,18 +129,64 @@ export default function Dashboard() {
   // Bitta tugma — SerpAPI orqali o'z mehmonxona + barcha raqiblar uchun
   // BARCHA OTA kanallarini birdaniga yangilaydi. "Mening narxim" Booking.com
   // narxi bilan to'ldiriladi (backend o'zi tanlaydi).
+  // Yakuniy natijani socket 'price:progress' {stage:'complete'} orqali kutamiz
+  // — backend HTTP so'rovni darrov yopadi (nginx timeout oldini olish), og'ir
+  // ish orqada davom etadi. Shu unsubscribe/timeoutlarni tozalash uchun ref.
+  const refreshCleanupRef = useRef(null);
+
+  async function finalizeRefresh(summary) {
+    try {
+      const updatedHotel = await hotelApi.getMine();
+      const updatedComps = await hotelApi.competitors();
+      setHotel(updatedHotel);
+      setCompetitors(updatedComps || []);
+      setRefreshResult({
+        ownChannels: summary?.own?.channels || 0,
+        ownPrice: updatedHotel?.currentPrice || 0,
+        compsMatched: summary?.competitors?.matched || 0,
+        compsTotal: summary?.competitors?.total || 0,
+      });
+    } catch {
+      /* reload xatosi — jim o'tamiz */
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   async function refreshAllFromSerpApi() {
     setRefreshing(true);
     setRefreshError('');
     setRefreshResult(null);
     setShowProgress(true); // jonli animatsiyali panelni ochamiz
+
+    // Avvalgi kuzatuvchini tozalaymiz.
+    if (refreshCleanupRef.current) { refreshCleanupRef.current(); refreshCleanupRef.current = null; }
+
+    // Socket orqali yakunlanishni kutamiz (started:true'dan keyin).
+    const off = onPriceProgress((p) => {
+      if (!p?.stage) return;
+      if (p.stage === 'complete') {
+        cleanup();
+        finalizeRefresh(p.summary);
+      } else if (p.stage === 'error') {
+        cleanup();
+        setRefreshing(false);
+        setRefreshError(p.message || t('refreshError'));
+      }
+    });
+    // Xavfsizlik: 6 daqiqada javob bo'lmasa spinnerni to'xtatamiz.
+    const timer = setTimeout(() => { cleanup(); setRefreshing(false); }, 6 * 60 * 1000);
+    function cleanup() { off?.(); clearTimeout(timer); refreshCleanupRef.current = null; }
+    refreshCleanupRef.current = cleanup;
+
     try {
       const res = await pricesApi.refreshAll();
-      // Kunlik throttle — bugun allaqachon yangilangan. Yangi so'rov ketmadi,
-      // bazadagi narxlar ko'rsatiladi + "o'zgarmadi" xabari.
-      if (res.throttled) {
+      // Kunlik throttle — bugun allaqachon yangilangan (backend darrov qaytaradi).
+      if (res?.throttled) {
+        cleanup();
         setShowProgress(false);
         setRefreshError('');
+        setRefreshing(false);
         setRefreshResult({
           throttled: true,
           message: lang === 'uz' ? 'Narxlar bugun allaqachon yangilangan — hali o\'zgarmadi.'
@@ -148,20 +195,11 @@ export default function Dashboard() {
         });
         return;
       }
-      const updatedHotel = await hotelApi.getMine();
-      const updatedComps = await hotelApi.competitors();
-      setHotel(updatedHotel);
-      setCompetitors(updatedComps || []);
-      setRefreshResult({
-        ownChannels: res.own.channels,
-        ownPrice: updatedHotel?.currentPrice || 0,
-        compsMatched: res.competitors.matched,
-        compsTotal: res.competitors.total,
-      });
+      // res.started === true — endi socket 'complete' eventini kutamiz (spinner davom etadi).
     } catch (err) {
-      setRefreshError(err.response?.data?.error || err.message || t('refreshError'));
-    } finally {
+      cleanup();
       setRefreshing(false);
+      setRefreshError(err.response?.data?.error || err.message || t('refreshError'));
     }
   }
 
@@ -470,7 +508,9 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+              {/* height aniq son (256px) — "100%" animatsiya paytida -1 o'lcham
+                  bilan Recharts ogohlantirishini keltirib chiqaradi. */}
+              <ResponsiveContainer width="100%" height={256} minWidth={0}>
                 <AreaChart data={chartData} margin={{ top: 8, right: 12, bottom: 4, left: -8 }}>
                   <defs>
                     <linearGradient id="mineGrad" x1="0" y1="0" x2="0" y2="1">

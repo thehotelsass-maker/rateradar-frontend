@@ -140,8 +140,8 @@ export const adminApi = {
   toggleUser: (id) =>
     api.patch(`/admin/users/${id}/toggle`).then((r) => r.data),
   // Qo'lda Pro dostup berish: days = 30 | 365 | 0 (doimiy)
-  grantPlan: (id, days) =>
-    api.patch(`/admin/users/${id}/grant`, { days }).then((r) => r.data),
+  grantPlan: (id, days, plan = 'pro') =>
+    api.patch(`/admin/users/${id}/grant`, { days, plan }).then((r) => r.data),
   revokePlan: (id) =>
     api.patch(`/admin/users/${id}/revoke`).then((r) => r.data),
   apiStats: () => api.get("/admin/api-stats").then((r) => r.data),

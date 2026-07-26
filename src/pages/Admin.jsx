@@ -448,13 +448,18 @@ function UsersTab({ users, reload }) {
     } catch {}
   }
 
-  // Dostup berish / bekor qilish (select'dan tanlanadi)
+  // Dostup berish / bekor qilish. value = 'revoke' YOKI 'plan:days'
+  // (masalan 'starter:30', 'pro:0', 'business:365').
   async function grant(id, value) {
     if (value === '') return;
     setBusy(id);
     try {
-      if (value === 'revoke') await adminApi.revokePlan(id);
-      else await adminApi.grantPlan(id, Number(value));
+      if (value === 'revoke') {
+        await adminApi.revokePlan(id);
+      } else {
+        const [plan, days] = value.split(':');
+        await adminApi.grantPlan(id, Number(days), plan);
+      }
       await refreshLists();
     } catch {}
     setBusy('');
@@ -521,7 +526,7 @@ function UsersTab({ users, reload }) {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {/* Dostup berish paneli — to'lovsiz Pro (hamkor/demo hisoblar) */}
+                {/* Dostup berish — istalgan tarif (Starter/Pro/Business) × muddat */}
                 <select
                   value=""
                   disabled={busy === u._id}
@@ -529,9 +534,21 @@ function UsersTab({ users, reload }) {
                   className="h-7 rounded-md border bg-background px-1.5 text-[11px] text-muted-foreground outline-none disabled:opacity-50"
                 >
                   <option value="" disabled>{busy === u._id ? '...' : 'Dostup berish'}</option>
-                  <option value="30">Pro — 1 oy</option>
-                  <option value="365">Pro — 1 yil</option>
-                  <option value="0">Pro — Doimiy</option>
+                  <optgroup label="Starter">
+                    <option value="starter:30">Starter — 1 oy</option>
+                    <option value="starter:365">Starter — 1 yil</option>
+                    <option value="starter:0">Starter — Doimiy</option>
+                  </optgroup>
+                  <optgroup label="Pro">
+                    <option value="pro:30">Pro — 1 oy</option>
+                    <option value="pro:365">Pro — 1 yil</option>
+                    <option value="pro:0">Pro — Doimiy</option>
+                  </optgroup>
+                  <optgroup label="Business">
+                    <option value="business:30">Business — 1 oy</option>
+                    <option value="business:365">Business — 1 yil</option>
+                    <option value="business:0">Business — Doimiy</option>
+                  </optgroup>
                   {u.plan !== 'free' && <option value="revoke">✕ Bekor qilish (Free)</option>}
                 </select>
                 <div className="text-right">

@@ -9,6 +9,7 @@ import {
   Layers,
   ArrowRight,
   Check,
+  X,
   Building2,
   BarChart3,
   Zap,
@@ -37,7 +38,7 @@ import { FomoNotifications } from '@/components/FomoNotifications';
 import { BentoFeatures } from '@/components/BentoFeatures';
 import { DashboardPreview } from '@/components/DashboardPreview';
 import CountUp from '@/components/ui/CountUp';
-import { useT } from '@/lib/i18n';
+import { useT, useLang } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 
 // Bo'lim ustidagi kichik yorliq (premium SaaS uslubi — limon nuqta bilan)
@@ -52,6 +53,7 @@ function Eyebrow({ children }) {
 
 export default function Landing() {
   const t = useT();
+  const lang = useLang((s) => s.lang);
   const navigate = useNavigate();
   const isAuthenticated = useAuth((s) => s.isAuthenticated());
   const [payPlan, setPayPlan] = useState(null); // { id, name, priceUzs }
@@ -64,20 +66,66 @@ export default function Landing() {
     { num: '03', title: t('step3Title'), desc: t('step3Desc') },
   ];
 
-  // Bitta reja — $49 (590 000 so'm/oy). Backend config/plans.js bilan mos.
-  const proPlan = {
-    id: 'pro',
-    title: t('planProTitle'),
-    desc: t('planOneDesc'),
-    priceUzs: 590000,
-    priceUsd: 49,
-    features: [
-      t('planProFeat1'),
-      t('planProFeat2'),
-      t('planProFeat3'),
-      t('planProFeat4'),
-    ],
+  // Uch tarif — backend config/plans.js bilan mos ($29 / $49 / $119).
+  const TIER_TXT = {
+    uz: {
+      f: {
+        h1: '1 mehmonxona', h5: '5 mehmonxonagacha',
+        c3: '3 raqib kuzatuvi', c10: '10 raqib kuzatuvi', cU: 'Cheksiz raqib',
+        booking: 'Faqat Booking.com', allota: 'Barcha OTA kanallari', allotaDeep: 'Barcha OTA + chuqur tahlil',
+        aiNo: 'AI tavsiya yo‘q', ai: 'AI narx tavsiyasi', aiDeep: 'AI + chuqur tavsiya',
+        revView: 'Sharhlarni ko‘rish', revReply: 'Sharh + javob', revAi: 'AI sharh javobi',
+        tv1: '1 TV kiosk', tv5: '5 TV kiosk', tvU: 'Cheksiz TV kiosk',
+        hsNo: 'Hotel Service yo‘q', hs: 'Hotel Service (Telegram bot)', hsMulti: 'Hotel Service (ko‘p filial)',
+        supEmail: 'Email qo‘llab-quvvatlash', supPri: 'Ustuvor qo‘llab-quvvatlash', supMgr: 'Shaxsiy menejer',
+      },
+      popular: 'Eng mashhur', month: 'oyiga', pickBtn: 'Tanlash', currentBtn: 'Joriy reja',
+    },
+    ru: {
+      f: {
+        h1: '1 отель', h5: 'До 5 отелей',
+        c3: '3 конкурента', c10: '10 конкурентов', cU: 'Без ограничений',
+        booking: 'Только Booking.com', allota: 'Все OTA-каналы', allotaDeep: 'Все OTA + глубокий анализ',
+        aiNo: 'Без AI-советов', ai: 'AI-советы по ценам', aiDeep: 'AI + глубокий анализ',
+        revView: 'Просмотр отзывов', revReply: 'Отзывы + ответы', revAi: 'AI-ответы на отзывы',
+        tv1: '1 TV-киоск', tv5: '5 TV-киосков', tvU: 'Без ограничений TV',
+        hsNo: 'Без Hotel Service', hs: 'Hotel Service (Telegram-бот)', hsMulti: 'Hotel Service (мультифилиал)',
+        supEmail: 'Email-поддержка', supPri: 'Приоритетная поддержка', supMgr: 'Персональный менеджер',
+      },
+      popular: 'Популярный', month: 'в месяц', pickBtn: 'Выбрать', currentBtn: 'Текущий план',
+    },
+    en: {
+      f: {
+        h1: '1 hotel', h5: 'Up to 5 hotels',
+        c3: '3 competitors', c10: '10 competitors', cU: 'Unlimited competitors',
+        booking: 'Booking.com only', allota: 'All OTA channels', allotaDeep: 'All OTA + deep analysis',
+        aiNo: 'No AI advice', ai: 'AI price advice', aiDeep: 'AI + deep advice',
+        revView: 'View reviews', revReply: 'Reviews + replies', revAi: 'AI review replies',
+        tv1: '1 TV kiosk', tv5: '5 TV kiosks', tvU: 'Unlimited TV kiosks',
+        hsNo: 'No Hotel Service', hs: 'Hotel Service (Telegram bot)', hsMulti: 'Hotel Service (multi-branch)',
+        supEmail: 'Email support', supPri: 'Priority support', supMgr: 'Dedicated manager',
+      },
+      popular: 'Most popular', month: 'per month', pickBtn: 'Choose', currentBtn: 'Current plan',
+    },
   };
+  const TT = TIER_TXT[lang] || TIER_TXT.uz;
+  const F = TT.f;
+  const ok = (label) => ({ label, ok: true });
+  const no = (label) => ({ label, ok: false });
+  const tiers = [
+    {
+      id: 'starter', name: 'Starter', priceUzs: 350000, priceUsd: 29, popular: false,
+      features: [ok(F.h1), ok(F.c3), ok(F.booking), ok(F.revView), ok(F.tv1), no(F.hsNo), no(F.aiNo), ok(F.supEmail)],
+    },
+    {
+      id: 'pro', name: 'Pro', priceUzs: 590000, priceUsd: 49, popular: true,
+      features: [ok(F.h1), ok(F.c10), ok(F.allota), ok(F.ai), ok(F.revReply), ok(F.hs), ok(F.tv5), ok(F.supPri)],
+    },
+    {
+      id: 'business', name: 'Business', priceUzs: 1400000, priceUsd: 119, popular: false,
+      features: [ok(F.h5), ok(F.cU), ok(F.allotaDeep), ok(F.aiDeep), ok(F.revAi), ok(F.hsMulti), ok(F.tvU), ok(F.supMgr)],
+    },
+  ];
 
   // Mehmonxona xizmati bosqichlari (QR → xizmat → Telegram → hisobot)
   const hsSteps = [
@@ -104,11 +152,11 @@ export default function Landing() {
 
   // To'lov tugmasi: kirmagan bo'lsa — "Ro'yxatdan o'ting" (register sahifasiga;
   // onboarding oxirida to'lov so'raladi). Kirgan bo'lsa — to'lov oynasi.
-  function handlePlanCta() {
+  function handlePlanCta(tier) {
     if (!isAuthenticated) return navigate('/register');
     setPayPlan({
-      id: proPlan.id, name: proPlan.title,
-      priceUzs: proPlan.priceUzs, priceUsd: proPlan.priceUsd,
+      id: tier.id, name: tier.name,
+      priceUzs: tier.priceUzs, priceUsd: tier.priceUsd,
     });
   }
 
@@ -340,74 +388,76 @@ export default function Landing() {
             </div>
           </Reveal>
 
-          <Stagger className="max-w-md mx-auto">
-            <StaggerItem
-              whileHover={{ y: -6 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-              className="relative rounded-2xl border border-primary ring-2 ring-primary/40 shadow-2xl shadow-primary/15 p-8 flex flex-col bg-card"
-            >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-lg">
-                <span className="w-1.5 h-1.5 rounded-full bg-lime-300" />
-                {t('planProTitle')}
-              </div>
+          <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto items-stretch">
+            {tiers.map((tier) => {
+              const usd = isYearly ? tier.priceUsd * 10 : tier.priceUsd;
+              const uzs = isYearly ? tier.priceUzs * 10 : tier.priceUzs;
+              return (
+                <StaggerItem
+                  key={tier.id}
+                  whileHover={{ y: -6 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                  className={`relative rounded-2xl p-7 flex flex-col bg-card ${
+                    tier.popular
+                      ? 'border border-primary ring-2 ring-primary/40 shadow-2xl shadow-primary/15 md:scale-[1.03]'
+                      : 'border border-border/70 shadow-soft'
+                  }`}
+                >
+                  {tier.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold shadow-lg whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-lime-300" />
+                      {TT.popular}
+                    </div>
+                  )}
 
-              <div className="text-center">
-                {isYearly ? (
-                  <div className="mt-4 mb-3 flex items-center justify-center">
-                    <span className="text-4xl font-bold tracking-tight text-primary">
-                      Maxsus narx
-                    </span>
+                  <div className="text-center">
+                    <div className="text-sm font-semibold text-muted-foreground">{tier.name}</div>
+                    <div className="mt-3 flex items-baseline justify-center gap-1.5">
+                      <span className="text-4xl font-bold tracking-tight">${usd}</span>
+                      <span className="text-xs text-muted-foreground">/ {isYearly ? t('perYear') : TT.month}</span>
+                    </div>
+                    <div className="mt-1.5 text-xs text-muted-foreground">
+                      {uzs.toLocaleString('uz-UZ')} {t('currencyUzs')}
+                    </div>
                   </div>
-                ) : (
-                  <>
-                    <div className="mt-2 flex items-baseline justify-center gap-1.5">
-                      <span className="text-5xl font-bold tracking-tight">
-                        ${proPlan.priceUsd}
-                      </span>
-                      <span className="text-sm text-muted-foreground">/ {t('perMonth')}</span>
-                    </div>
-                    <div className="mt-1.5 text-sm text-muted-foreground">
-                      {proPlan.priceUzs.toLocaleString('uz-UZ')} {t('currencyUzs')} / {t('perMonth')}
-                    </div>
-                  </>
-                )}
-                <div className="mt-2 text-xs text-muted-foreground/70">{proPlan.desc}</div>
-              </div>
 
-              <ul className="mt-7 space-y-2.5 flex-1">
-                {proPlan.features.map((f, j) => (
-                  <li key={j} className="flex items-start gap-2.5 text-sm">
-                    <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                    </div>
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
+                  <ul className="mt-6 space-y-2 flex-1">
+                    {tier.features.map((f, j) => (
+                      <li key={j} className={`flex items-start gap-2 text-[13px] ${f.ok ? '' : 'text-muted-foreground/60'}`}>
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                          f.ok ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground/60'
+                        }`}>
+                          {f.ok ? <Check className="h-2.5 w-2.5" strokeWidth={3} /> : <X className="h-2.5 w-2.5" strokeWidth={3} />}
+                        </div>
+                        <span>{f.label}</span>
+                      </li>
+                    ))}
+                  </ul>
 
-              <Button
-                className="mt-7 w-full rounded-full flex items-center justify-center gap-2"
-                size="lg"
-                onClick={() => {
-                  if (isYearly) {
-                    setLeadVariant('yearly'); // yillik reja — bog'lanish formasi
-                  } else {
-                    handlePlanCta();
-                  }
-                }}
-              >
-                {isYearly ? "Yordam markaziga bog'lanish" : (isAuthenticated ? t('subscribe') : t('signUp'))}
-                {isYearly ? <MessageSquare className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
-              </Button>
-
-              {/* To'lov usullari: Humo · Visa · Mastercard — hammasi faol */}
-              <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 font-medium">
-                  <span className="w-1 h-1 rounded-full bg-green-500" /> Humo · Visa · Mastercard
-                </span>
-              </div>
-            </StaggerItem>
+                  <Button
+                    className="mt-6 w-full rounded-full flex items-center justify-center gap-2"
+                    size="lg"
+                    variant={tier.popular ? 'default' : 'outline'}
+                    onClick={() => {
+                      if (isYearly) setLeadVariant('yearly'); // yillik — bog'lanish formasi
+                      else handlePlanCta(tier);
+                    }}
+                  >
+                    {isYearly ? (lang === 'ru' ? 'Связаться' : lang === 'en' ? 'Contact us' : 'Bog\'lanish')
+                      : (isAuthenticated ? TT.pickBtn : t('signUp'))}
+                    {isYearly ? <MessageSquare className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                  </Button>
+                </StaggerItem>
+              );
+            })}
           </Stagger>
+
+          {/* To'lov usullari */}
+          <div className="mt-8 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 font-medium">
+              <span className="w-1 h-1 rounded-full bg-green-500" /> Humo · Visa · Mastercard
+            </span>
+          </div>
         </div>
       </section>
 
