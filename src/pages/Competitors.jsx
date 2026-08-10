@@ -425,6 +425,18 @@ function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
     }
   };
 
+  // Raqib xona turlarini (Booking) yangilash — sekin skreyp.
+  const [roomsBusy, setRoomsBusy] = useState(false);
+  const fetchRooms = async () => {
+    setRoomsBusy(true);
+    try {
+      await hotelApi.fetchCompetitorRooms(comp._id);
+      loadDetail(); // yangilangan roomTypes bilan qayta yuklaymiz
+    } catch { /* skreyp bo'sh/xato — jimgina */ } finally {
+      setRoomsBusy(false);
+    }
+  };
+
   const allOtaEntries = data
     ? Object.entries(data.otaPrices || {})
         .filter(([, v]) => v > 0)
@@ -501,6 +513,7 @@ function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
         <div className="flex border-b border-border/60 px-5 pt-1">
           {[
             { key: 'prices', label: 'OTA Narxlar', icon: DollarSign },
+            { key: 'rooms', label: lang === 'ru' ? 'Номера' : lang === 'en' ? 'Rooms' : 'Xonalar', icon: Building2 },
             { key: 'history', label: 'Narx tarixi', icon: BarChart2 },
             { key: 'reviews', label: 'Sharhlar', icon: MessageSquare },
           ].map(({ key, label, icon: Icon }) => (
@@ -589,6 +602,63 @@ function CompetitorDetailModal({ comp, myPrice, onClose, onFetchPrice }) {
                       "Narx olish" o'sha kanaldan aynan shu havola bo'yicha narx keltiradi */}
                   <ChannelLinksEditor comp={comp} onPriceFetched={loadDetail} />
                 </>
+              )}
+
+              {/* Tab: Xonalar — raqibning xona turlari (Booking) */}
+              {activeTab === 'rooms' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      {lang === 'uz' ? 'Raqibning Booking\'dagi xona turlari va narxlari'
+                        : lang === 'ru' ? 'Типы номеров конкурента с Booking'
+                        : 'Competitor room types from Booking'}
+                    </p>
+                    <Button variant="outline" size="sm" onClick={fetchRooms} disabled={roomsBusy}>
+                      {roomsBusy ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1.5" />}
+                      {lang === 'uz' ? 'Yangilash' : lang === 'ru' ? 'Обновить' : 'Refresh'}
+                    </Button>
+                  </div>
+
+                  {(data?.roomTypes?.length > 0) ? (
+                    <div className="space-y-2">
+                      {[...data.roomTypes].sort((a, b) => a.price - b.price).map((r, i) => (
+                        <div key={i} className="flex items-center justify-between gap-3 rounded-xl bg-card/60 border border-border/60 p-3">
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium truncate">{r.name || 'Room'}</div>
+                            <div className="text-[11px] text-muted-foreground">{r.guests || 2} {lang === 'uz' ? 'kishi' : lang === 'ru' ? 'гостя' : 'guests'}</div>
+                          </div>
+                          <div className="text-sm font-semibold tabular-nums shrink-0">{formatPrice(r.price)}</div>
+                        </div>
+                      ))}
+                      {data.roomsFetchedAt && (
+                        <p className="text-[10px] text-muted-foreground text-right pt-1">
+                          {lang === 'uz' ? 'Yangilangan' : lang === 'ru' ? 'Обновлено' : 'Updated'}: {timeAgo(data.roomsFetchedAt)}
+                        </p>
+                      )}
+                    </div>
+                  ) : roomsBusy ? (
+                    <div className="py-10 text-center">
+                      <Loader2 className="h-6 w-6 mx-auto animate-spin text-primary mb-2" />
+                      <p className="text-xs text-muted-foreground">
+                        {lang === 'uz' ? 'Xonalar olinmoqda (Booking skreyp, biroz vaqt olishi mumkin)...'
+                          : lang === 'ru' ? 'Загрузка номеров (скрейп Booking)...'
+                          : 'Fetching rooms (Booking scrape)...'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 rounded-xl bg-muted/20 border border-dashed border-border">
+                      <Building2 className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        {lang === 'uz' ? "Xona ma'lumoti yo'q" : lang === 'ru' ? 'Нет данных о номерах' : 'No room data'}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground/70 mt-1">
+                        {lang === 'uz' ? '"Yangilash"ni bosing — Booking\'dan olib kelamiz'
+                          : lang === 'ru' ? 'Нажмите "Обновить"'
+                          : 'Click "Refresh" to fetch from Booking'}
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Tab: Narx tarixi */}

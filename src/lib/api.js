@@ -121,6 +121,9 @@ export const hotelApi = {
       .then((r) => r.data),
   getCompetitorDetail: (id) =>
     api.get(`/hotels/competitors/${id}/detail`).then((r) => r.data),
+  // Raqib xona turlari (Booking skreyp, sekin) — 1 daqiqa timeout.
+  fetchCompetitorRooms: (id) =>
+    api.post(`/hotels/competitors/${id}/rooms`, null, { timeout: 60 * 1000 }).then((r) => r.data),
   updateCompetitorOtaUrls: (id, otaUrls) =>
     api.put(`/hotels/competitors/${id}/ota-urls`, { otaUrls }).then((r) => r.data.competitor),
   fetchCompetitorChannel: (id, source) =>
