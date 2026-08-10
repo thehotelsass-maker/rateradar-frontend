@@ -256,6 +256,8 @@ export const pricesApi = {
     api
       .get("/prices/rate-shopper", { params: { days, channel } })
       .then((r) => r.data),
+  // Narx signallari — raqib narxi nega o'zgardi (bozor/sezon vs shaxsiy vs occupancy)
+  signals: () => api.get("/prices/signals").then((r) => r.data),
   roomShopper: (days = 7, provider = "booking") =>
     api.get("/prices/room-shopper", { params: { days, provider } }).then((r) => r.data),
   refreshRooms: () =>

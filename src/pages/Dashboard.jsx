@@ -35,6 +35,7 @@ import { useT, useLang } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { PlanLock } from '@/components/PlanLock';
 import { allows } from '@/lib/planLimits';
+import PriceSignalCard from '@/components/PriceSignalCard';
 import { useFormatPrice, cn } from '@/lib/utils';
 import { getCache, setCache } from '@/lib/clientCache';
 
@@ -645,6 +646,9 @@ export default function Dashboard() {
       {/* AI Maslahatchi — narx/statistikaga qarab tavsiyalar (xizmat qo'shish,
           hotel-service'ga ulanish va h.k.). Competitors sahifasi bilan bir xil
           kesh kalitidan (`ai:<id>:<lang>`) foydalanadi. */}
+      {/* Narx signallari — raqib narxi nega o'zgardi (bozor vs shaxsiy vs occupancy) */}
+      <PriceSignalCard />
+
       <PlanLock
         locked={!allows(user, 'ai')}
         message={lang === 'uz' ? 'AI Maslahatchi Pro va Business tariflarida'
