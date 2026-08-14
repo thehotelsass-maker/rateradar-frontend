@@ -127,6 +127,15 @@ export const hotelApi = {
   // Raqib xona turlari (Booking skreyp, sekin) — 1 daqiqa timeout.
   fetchCompetitorRooms: (id) =>
     api.post(`/hotels/competitors/${id}/rooms`, null, { timeout: 60 * 1000 }).then((r) => r.data),
+  // AYNAN shu tun uchun raqib xonalari + "necha xona qoldi".
+  // Kesh 20 soat — bir katakchani qayta ochish kredit sarflamaydi.
+  competitorRoomsByDate: (id, date, force = false) =>
+    api
+      .get(`/hotels/competitors/${id}/rooms`, {
+        params: force ? { date, force: true } : { date },
+        timeout: 60 * 1000,
+      })
+      .then((r) => r.data),
   updateCompetitorOtaUrls: (id, otaUrls) =>
     api.put(`/hotels/competitors/${id}/ota-urls`, { otaUrls }).then((r) => r.data.competitor),
   fetchCompetitorChannel: (id, source) =>

@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { RefreshCw, Star, MapPin, ArrowDown, ArrowUp, Minus, Download, Loader2, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Star, MapPin, ArrowDown, ArrowUp, Minus, Download, Loader2, CheckCircle2, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import CountUp from '@/components/ui/CountUp';
 import { Reveal } from '@/components/ui/motion';
 import PriceRefreshProgress from '@/components/PriceRefreshProgress';
+import CompetitorRoomsPanel from '@/components/CompetitorRoomsPanel';
 import { onPriceProgress } from '@/lib/socket';
 import { cellPop } from '@/lib/animations';
 import { useT, useLang } from '@/lib/i18n';
@@ -132,8 +133,16 @@ function RoomTable({ data, lang, t }) {
 
 function CompetitorTable({ data, hotel, lang, t, channel }) {
   const formatPrice = useFormatPrice();
+  // Ochilgan katakcha: qaysi raqib, qaysi tun. Bir vaqtda bittasi ochiladi —
+  // har ochilish skreyp so'rovi bo'lishi mumkin, shuning uchun tasodifiy
+  // ko'p ochilishning oldi olinadi.
+  const [openCell, setOpenCell] = useState(null); // { id, iso }
+
   if (!data) return <div className="py-16 text-center text-sm text-muted-foreground">{t('loading')}</div>;
   if (!data.rows?.length) return <div className="py-16 text-center text-sm text-muted-foreground">{t('noCompetitorsYet')}</div>;
+
+  const toggleCell = (id, iso) =>
+    setOpenCell((cur) => (cur && cur.id === id && cur.iso === iso ? null : { id, iso }));
 
   return (
     <table className="w-full text-sm">
@@ -203,7 +212,8 @@ function CompetitorTable({ data, hotel, lang, t, channel }) {
         </tr>
 
         {data.rows.map(({ competitor: c, prices }, ri) => (
-          <tr key={c._id} className="hover:bg-muted/20 transition-colors">
+          <Fragment key={c._id}>
+          <tr className="hover:bg-muted/20 transition-colors">
             <td className="px-4 py-3 sticky left-0 bg-card z-10 hover:bg-muted/20">
               <div className="font-medium text-sm truncate max-w-[180px]">{c.name}</div>
               <div className="text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5">
@@ -233,9 +243,13 @@ function CompetitorTable({ data, hotel, lang, t, channel }) {
               const price = hasPrice ? cell.price : 0;
               const diff = cell?.diff || 0;
               const Icon = diffIcon(diff);
+              const isOpen = openCell?.id === c._id && openCell?.iso === iso;
               return (
                 <td key={iso} className="px-1.5 py-2 text-center">
-                  <motion.div
+                  <motion.button
+                    type="button"
+                    onClick={() => toggleCell(c._id, iso)}
+                    title={t('openRooms') || 'Xona turlarini ochish'}
                     variants={cellPop}
                     initial="hidden"
                     whileInView="show"
@@ -243,12 +257,14 @@ function CompetitorTable({ data, hotel, lang, t, channel }) {
                     transition={{ delay: Math.min((ri + ci) * 0.035, 0.5) }}
                     whileHover={{ scale: 1.09, y: -3 }}
                     className={cn(
-                      'inline-flex flex-col items-center px-2 py-1 rounded-md border min-w-[68px] transition-shadow hover:shadow-lg cursor-default',
-                      hasPrice ? diffColor(diff) : 'text-muted-foreground/60 bg-muted/20 border-border'
+                      'inline-flex flex-col items-center px-2 py-1 rounded-md border min-w-[68px] transition-shadow hover:shadow-lg cursor-pointer',
+                      hasPrice ? diffColor(diff) : 'text-muted-foreground/60 bg-muted/20 border-border',
+                      isOpen && 'ring-2 ring-primary ring-offset-1',
                     )}
                   >
-                    <div className="text-sm font-semibold tabular-nums">
+                    <div className="text-sm font-semibold tabular-nums flex items-center gap-0.5">
                       <CountUp value={price} format={formatPrice} duration={0.9} />
+                      <ChevronDown className={cn('h-2.5 w-2.5 transition-transform opacity-50', isOpen && 'rotate-180 opacity-100')} />
                     </div>
                     {hasPrice && data.myHotel.price > 0 && (
                       <div className="flex items-center gap-0.5 text-[10px] tabular-nums leading-none">
@@ -256,11 +272,26 @@ function CompetitorTable({ data, hotel, lang, t, channel }) {
                         {Math.abs(diff)}%
                       </div>
                     )}
-                  </motion.div>
+                  </motion.button>
                 </td>
               );
             })}
           </tr>
+          {/* Ochilgan katakcha — o'sha tun uchun xona turlari, narxlari va
+              "necha xona qoldi". Jadval kengligi bo'ylab yoyiladi. */}
+          {openCell?.id === c._id && (
+            <tr>
+              <td colSpan={data.columns.length + 1} className="p-0">
+                <CompetitorRoomsPanel
+                  competitorId={c._id}
+                  competitorName={c.name}
+                  date={openCell.iso}
+                  myPrice={data.myHotel?.price || 0}
+                />
+              </td>
+            </tr>
+          )}
+          </Fragment>
         ))}
       </tbody>
     </table>
