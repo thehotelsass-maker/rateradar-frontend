@@ -22,6 +22,8 @@ const TXT = {
     loading: 'Xona narxlari yig\'ilmoqda...', slow: 'Booking sahifasi o\'qilmoqda, 10-20 soniya',
     empty: 'Bu tun uchun xona ma\'lumoti topilmadi',
     emptyHint: 'Raqib bu sanaga yopiq bo\'lishi yoki Booking sahifasi o\'qilmagan bo\'lishi mumkin.',
+    past_date: 'Bu sana o\'tib ketgan — o\'tgan tun uchun narx bo\'lmaydi. Sahifani yangilang.',
+    no_booking_url: 'Bu raqibning Booking.com havolasi hali topilmagan. Narxlarni yangilaganingizda avtomatik topiladi.',
     guests: 'kishi', left: 'xona qoldi', refresh: 'Yangilash',
     rooms: 'xona turi', mine: 'Sizning eng arzon xonangiz', diff: 'farq',
     cached: 'keshdan', justNow: 'hozirgina',
@@ -30,6 +32,8 @@ const TXT = {
     loading: 'Собираем цены номеров...', slow: 'Читаем страницу Booking, 10-20 секунд',
     empty: 'Нет данных о номерах на эту ночь',
     emptyHint: 'Возможно, отель закрыт на эту дату или страница Booking не прочиталась.',
+    past_date: 'Эта дата уже прошла — цен за прошедшую ночь не бывает. Обновите страницу.',
+    no_booking_url: 'Ссылка на Booking.com для этого конкурента ещё не найдена. Она появится при обновлении цен.',
     guests: 'гостей', left: 'номера осталось', refresh: 'Обновить',
     rooms: 'типа номеров', mine: 'Ваш самый дешёвый номер', diff: 'разница',
     cached: 'из кэша', justNow: 'только что',
@@ -38,6 +42,8 @@ const TXT = {
     loading: 'Fetching room prices...', slow: 'Reading the Booking page, 10-20 seconds',
     empty: 'No room data for this night',
     emptyHint: 'The hotel may be closed for this date, or the Booking page could not be read.',
+    past_date: 'This date has passed — there are no rates for a past night. Refresh the page.',
+    no_booking_url: 'No Booking.com link found for this competitor yet. It gets discovered when you refresh prices.',
     guests: 'guests', left: 'rooms left', refresh: 'Refresh',
     rooms: 'room types', mine: 'Your cheapest room', diff: 'difference',
     cached: 'cached', justNow: 'just now',
@@ -49,7 +55,7 @@ export default function CompetitorRoomsPanel({ competitorId, competitorName, dat
   const tx = TXT[lang] || TXT.en;
   const formatPrice = useFormatPrice();
 
-  const [state, setState] = useState({ loading: true, rooms: null, error: false, cached: false });
+  const [state, setState] = useState({ loading: true, rooms: null, error: false, cached: false, reason: null });
   const [slow, setSlow] = useState(false);
 
   async function load(force = false) {
@@ -58,7 +64,7 @@ export default function CompetitorRoomsPanel({ competitorId, competitorName, dat
     const slowTimer = setTimeout(() => setSlow(true), 3000);
     try {
       const d = await hotelApi.competitorRoomsByDate(competitorId, date, force);
-      setState({ loading: false, rooms: d.rooms || [], error: false, cached: d.cached });
+      setState({ loading: false, rooms: d.rooms || [], error: false, cached: d.cached, reason: d.reason || null });
     } catch {
       setState({ loading: false, rooms: [], error: true, cached: false });
     } finally {
@@ -68,10 +74,12 @@ export default function CompetitorRoomsPanel({ competitorId, competitorName, dat
 
   useEffect(() => {
     let alive = true;
-    setState({ loading: true, rooms: null, error: false, cached: false });
+    setState({ loading: true, rooms: null, error: false, cached: false, reason: null });
     hotelApi.competitorRoomsByDate(competitorId, date)
-      .then((d) => { if (alive) setState({ loading: false, rooms: d.rooms || [], error: false, cached: d.cached }); })
-      .catch(() => { if (alive) setState({ loading: false, rooms: [], error: true, cached: false }); });
+      .then((d) => {
+        if (alive) setState({ loading: false, rooms: d.rooms || [], error: false, cached: d.cached, reason: d.reason || null });
+      })
+      .catch(() => { if (alive) setState({ loading: false, rooms: [], error: true, cached: false, reason: null }); });
     return () => { alive = false; };
   }, [competitorId, date]);
 
@@ -115,7 +123,10 @@ export default function CompetitorRoomsPanel({ competitorId, competitorName, dat
             <AlertTriangle className="h-3.5 w-3.5" />
             {tx.empty}
           </p>
-          <p className="text-[11px] text-muted-foreground/70 mt-1">{tx.emptyHint}</p>
+          {/* Sabab ma'lum bo'lsa aniq aytamiz — "topilmadi" deb qoldirmaymiz. */}
+          <p className="text-[11px] text-muted-foreground/70 mt-1 max-w-md mx-auto">
+            {tx[state.reason] || tx.emptyHint}
+          </p>
         </div>
       )}
 
