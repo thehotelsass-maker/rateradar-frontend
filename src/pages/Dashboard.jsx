@@ -36,8 +36,31 @@ import { useAuth } from '@/lib/auth';
 import { PlanLock } from '@/components/PlanLock';
 import { allows } from '@/lib/planLimits';
 import PriceSignalCard from '@/components/PriceSignalCard';
+import OccupancyPrompt from '@/components/OccupancyPrompt';
 import { useFormatPrice, cn } from '@/lib/utils';
 import { getCache, setCache } from '@/lib/clientCache';
+
+// Kanal tavsiyasi holatlari. `hold` / `no_data` / `low_confidence` — backend
+// qoida qatlamidan keladi (priceAdvice.rules.js). Ular AI xatosi emas, ATAYLAB
+// qo'yilgan holatlar: taqqoslash bazasi bo'lmaganda tavsiya BERMASLIK — bu
+// mahsulot nuqsoni emas, halollik.
+const ACTION_LABELS = {
+  raise: (l) => ({ label: l === 'uz' ? '⬆ Ko\'tarish' : l === 'ru' ? '⬆ Поднять' : '⬆ Raise', cls: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400' }),
+  lower: (l) => ({ label: l === 'uz' ? '⬇ Tushirish' : l === 'ru' ? '⬇ Снизить' : '⬇ Lower', cls: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400' }),
+  keep: (l) => ({ label: l === 'uz' ? '✓ Saqlash' : l === 'ru' ? '✓ Оставить' : '✓ Keep', cls: 'bg-muted text-muted-foreground' }),
+  hold: (l) => ({ label: l === 'uz' ? '⏸ Kutish' : l === 'ru' ? '⏸ Подождать' : '⏸ Hold', cls: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400' }),
+  no_data: (l) => ({ label: l === 'uz' ? '— Ma\'lumot yo\'q' : l === 'ru' ? '— Нет данных' : '— No data', cls: 'bg-muted text-muted-foreground/70' }),
+  low_confidence: (l) => ({ label: l === 'uz' ? '⚠ Kam ma\'lumot' : l === 'ru' ? '⚠ Мало данных' : '⚠ Low data', cls: 'bg-amber-50/60 dark:bg-amber-950/25 text-amber-600 dark:text-amber-500/90' }),
+  // Bu kanalda narx belgilab bo'lmaydi (wholesaler/metasearch). "Tavsiya
+  // berilmadi" emas — "tavsiya berish MUMKIN emas". Farq muhim.
+  monitor_only: (l) => ({ label: l === 'uz' ? '👁 Kuzatiladi' : l === 'ru' ? '👁 Мониторинг' : '👁 Monitored', cls: 'bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400' }),
+};
+
+const CONFIDENCE_LABELS = {
+  high: (l) => (l === 'uz' ? 'ishonch: yuqori' : l === 'ru' ? 'уверенность: высокая' : 'confidence: high'),
+  medium: (l) => (l === 'uz' ? 'ishonch: o\'rta' : l === 'ru' ? 'уверенность: средняя' : 'confidence: medium'),
+  low: (l) => (l === 'uz' ? 'ishonch: past' : l === 'ru' ? 'уверенность: низкая' : 'confidence: low'),
+};
 
 export default function Dashboard() {
   const t = useT();
@@ -396,6 +419,12 @@ export default function Dashboard() {
 
       </div>
 
+      {/* ═══ TO'LISH DARAJASI ═══
+          AI tavsiyasidan OLDIN turadi — chunki tavsiya sifati aynan shu javobga
+          bog'liq. Javob berilgach ixcham qatorga aylanadi, `onChange` esa
+          tavsiyani darhol qayta yuklaydi (backend keshni ham bekor qiladi). */}
+      <OccupancyPrompt onChange={() => loadOtaAdvice(true)} />
+
       {/* ═══ AI TAVSIYA — HAR BIR OTA KANALI UCHUN ═══
           Raqiblarning aynan shu kanaldagi narxlari tahlil qilinib,
           har kanalga aniq narx tavsiya qilinadi (Gemini, 6h kesh). */}
@@ -403,9 +432,13 @@ export default function Dashboard() {
         <Card variant="glass" className="overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
+              {/* Sarlavha "AI tavsiya" EMAS: qatorlarning bir qismi qoida
+                  qatlamidan keladi (kuzatiladi / kam ma'lumot / kutish), faqat
+                  boshqariladigan kanallar AI tahlilidan o'tadi. Har qator o'z
+                  manbasini `source` bilan ko'rsatadi. */}
               <CardTitle className="text-base flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                {lang === 'uz' ? 'AI tavsiya — har bir OTA uchun' : lang === 'ru' ? 'AI совет — для каждого OTA' : 'AI advice — per OTA channel'}
+                {lang === 'uz' ? 'Narx tavsiyalari — kanallar bo\'yicha' : lang === 'ru' ? 'Ценовые рекомендации — по каналам' : 'Price recommendations — by channel'}
               </CardTitle>
               <div className="flex items-center gap-2">
                 {/* Tahlilni yig'ish/ochish */}
@@ -429,12 +462,28 @@ export default function Dashboard() {
           </CardHeader>
           {!otaAdviceCollapsed && (
           <CardContent className="space-y-2.5">
+            {/* ═══ RATE PARITY OGOHLANTIRISHI ═══
+                Wholesaler kanaldagi past narx — tavsiya emas, ogohlantirish:
+                inventaringiz kimdir tomonidan arzonroq sotilmoqda. Booking
+                shartnomasi buzilishi mumkin. Bu eng tepada turishi kerak. */}
+            {otaAdvice?.parity?.breaches?.length > 0 && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-50/60 dark:bg-amber-950/20 p-3.5 space-y-2">
+                <p className="text-sm font-bold text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                  ⚠️ {lang === 'uz' ? 'Narx pariteti buzilgan bo\'lishi mumkin'
+                    : lang === 'ru' ? 'Возможно нарушение паритета цен'
+                    : 'Possible rate parity breach'}
+                </p>
+                {otaAdvice.parity.breaches.map((b, i) => (
+                  <p key={i} className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                    {b.message}
+                  </p>
+                ))}
+              </div>
+            )}
             {(otaAdvice?.channels || []).map((c, i) => {
-              const actionCfg = c.action === 'raise'
-                ? { label: lang === 'uz' ? '⬆ Ko\'tarish' : lang === 'ru' ? '⬆ Поднять' : '⬆ Raise', cls: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400' }
-                : c.action === 'lower'
-                ? { label: lang === 'uz' ? '⬇ Tushirish' : lang === 'ru' ? '⬇ Снизить' : '⬇ Lower', cls: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400' }
-                : { label: lang === 'uz' ? '✓ Saqlash' : lang === 'ru' ? '✓ Оставить' : '✓ Keep', cls: 'bg-muted text-muted-foreground' };
+              const actionCfg = ACTION_LABELS[c.action]
+                ? ACTION_LABELS[c.action](lang)
+                : ACTION_LABELS.keep(lang);
               return (
                 <div key={i} className="rounded-xl border bg-card/60 p-3.5">
                   <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -449,18 +498,48 @@ export default function Dashboard() {
                           <span className="text-base font-bold text-primary tabular-nums">${c.suggestedPrice}</span>
                         </>
                       )}
-                      {c.delta !== 0 && c.suggestedPrice > 0 && (
+                      {/* delta null bo'lishi mumkin — hisoblab bo'lmagani. `0` yozish
+                          "o'zgarish yo'q" degan noto'g'ri ma'no berardi. */}
+                      {c.delta != null && c.delta !== 0 && c.suggestedPrice > 0 && (
                         <span className={cn('text-xs font-semibold tabular-nums', c.delta > 0 ? 'text-emerald-600' : 'text-rose-600')}>
                           {c.delta > 0 ? '+' : ''}${c.delta}/{lang === 'ru' ? 'ночь' : lang === 'uz' ? 'kecha' : 'night'}
                         </span>
                       )}
                     </div>
-                    <span className={cn('text-[11px] font-semibold px-2.5 py-1 rounded-full', actionCfg.cls)}>
-                      {actionCfg.label}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {c.confidence && c.suggestedPrice > 0 && (
+                        <span className="text-[10px] text-muted-foreground/70">
+                          {(CONFIDENCE_LABELS[c.confidence] || CONFIDENCE_LABELS.low)(lang)}
+                        </span>
+                      )}
+                      <span className={cn('text-[11px] font-semibold px-2.5 py-1 rounded-full', actionCfg.cls)}>
+                        {actionCfg.label}
+                      </span>
+                    </div>
                   </div>
                   {c.reason && (
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{c.reason}</p>
+                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                      {/* Matn AI dan keldimi yoki qoidadanmi — halol belgilanadi.
+                          Shablon matnni "AI tahlili" deb atash ishonchni yo'qotadi. */}
+                      <span className={cn(
+                        'inline-block mr-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide align-middle',
+                        c.source === 'ai'
+                          ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                          : 'bg-muted text-muted-foreground/70',
+                      )}>
+                        {c.source === 'ai' ? 'AI' : (lang === 'uz' ? 'Hisoblangan' : lang === 'ru' ? 'Расчёт' : 'Computed')}
+                      </span>
+                      {c.reason}
+                    </p>
+                  )}
+                  {/* Chegaraga tushgan tavsiyada asl maqsad ham ko'rinsin —
+                      foydalanuvchi qayerga borayotganini bilsin. */}
+                  {c.targetPrice > 0 && c.targetPrice !== c.suggestedPrice && (
+                    <p className="text-[11px] text-muted-foreground/70 mt-1">
+                      {lang === 'uz' ? `Bosqichli: bozor maqsadi $${c.targetPrice}`
+                        : lang === 'ru' ? `Поэтапно: цель рынка $${c.targetPrice}`
+                        : `Staged: market target $${c.targetPrice}`}
+                    </p>
                   )}
                   {c.stats && (
                     <p className="text-[11px] text-muted-foreground/70 mt-1 font-mono">
@@ -471,6 +550,32 @@ export default function Dashboard() {
                 </div>
               );
             })}
+            {/* Qamrov — nechta kanalga HAQIQATAN tavsiya berildi. Halollik:
+                12 ta kartochka ko'rsatib, hammasi "ma'lumot yig'ilmoqda" bo'lsa,
+                foydalanuvchi buni o'zi sanab chiqmasin. */}
+            {otaAdvice?.coverage?.total > 0 && (
+              <p className="text-[11px] text-muted-foreground/70 pt-1">
+                {lang === 'uz'
+                  ? `${otaAdvice.coverage.total} kanaldan ${otaAdvice.coverage.actionable} tasiga tavsiya berildi`
+                  : lang === 'ru'
+                  ? `Рекомендации даны для ${otaAdvice.coverage.actionable} из ${otaAdvice.coverage.total} каналов`
+                  : `${otaAdvice.coverage.actionable} of ${otaAdvice.coverage.total} channels have a recommendation`}
+                {otaAdvice.coverage.monitorOnly > 0 && (
+                  lang === 'uz'
+                    ? ` · ${otaAdvice.coverage.monitorOnly} tasida narx belgilab bo'lmaydi (qayta sotuvchi/metaqidiruv)`
+                    : lang === 'ru'
+                    ? ` · в ${otaAdvice.coverage.monitorOnly} нельзя задать цену (перекупщик/метапоиск)`
+                    : ` · ${otaAdvice.coverage.monitorOnly} where you cannot set a price (reseller/metasearch)`
+                )}
+                {otaAdvice.coverage.noData > 0 && (
+                  lang === 'uz'
+                    ? ` · ${otaAdvice.coverage.noData} tasida sizning narxingiz yig'ilmagan`
+                    : lang === 'ru'
+                    ? ` · в ${otaAdvice.coverage.noData} не собрана ваша цена`
+                    : ` · ${otaAdvice.coverage.noData} missing your own price`
+                )}
+              </p>
+            )}
             {otaAdviceLoading && !otaAdvice?.channels?.length && (
               <div className="py-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />

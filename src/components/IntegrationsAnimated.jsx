@@ -7,17 +7,20 @@ const TXT = {
   uz: {
     badge: 'Integratsiyalar',
     title: 'Barcha tizimlar bilan bitta aloqa',
-    desc: "OTA platformalardan narxlarni yig'ish va mehmonxona boshqaruv tizimingizga (PMS) to'g'ridan-to'g'ri bog'lanish orqali jarayonni 100% avtomatlashtiring.",
+    desc: "OTA platformalardan narxlarni avtomatik yig'amiz. PMS (mehmonxona boshqaruv tizimi) integratsiyasi ustida ish olib borilmoqda.",
+    planned: 'Rejalashtirilgan',
   },
   ru: {
     badge: 'Интеграции',
     title: 'Единая связь со всеми системами',
-    desc: 'Автоматизируйте процесс на 100%: сбор цен с OTA-платформ и прямое подключение к вашей системе управления отелем (PMS).',
+    desc: 'Автоматически собираем цены с OTA-платформ. Интеграция с PMS (система управления отелем) в разработке.',
+    planned: 'В планах',
   },
   en: {
     badge: 'Integrations',
     title: 'One connection to all systems',
-    desc: 'Automate 100% of the process: collect prices from OTA platforms and connect directly to your property management system (PMS).',
+    desc: 'We collect prices from OTA platforms automatically. PMS (property management system) integration is in development.',
+    planned: 'Planned',
   },
 };
 
@@ -29,8 +32,14 @@ export function IntegrationsAnimated() {
     { icon: Database, label: "Expedia", color: "text-yellow-600", bg: "bg-yellow-600/10", x: 140, y: -90, delay: 0.2 },
     { icon: MapPin, label: "Agoda", color: "text-rose-600", bg: "bg-rose-600/10", x: -180, y: 30, delay: 0.4 },
     { icon: CalendarRange, label: "Airbnb", color: "text-pink-600", bg: "bg-pink-600/10", x: 180, y: 30, delay: 0.6 },
-    { icon: Building2, label: "TravelLine (PMS)", color: "text-teal-600", bg: "bg-teal-600/10", x: -100, y: 130, delay: 0.8 },
-    { icon: Server, label: "Opera (PMS)", color: "text-indigo-600", bg: "bg-indigo-600/10", x: 100, y: 130, delay: 1.0 }
+    // ⚠️ PMS integratsiyalari HALI MAVJUD EMAS — backend'da birorta PMS
+    // endpointi yo'q. Ilgari ular boshqa logolar bilan bir xil ko'rsatilar edi,
+    // ya'ni sotuvda "biz ulanamiz" deb va'da berilardi. Mehmonxona uchun PMS
+    // eng muhim savol; bajarilmagan va'da narxni tushirishdan qimmatroq turadi.
+    // `planned: true` bo'lgan tugunlar so'nik va "rejalashtirilgan" yorlig'i bilan
+    // chiziladi. Integratsiya haqiqatan yozilgach — shu bayroqni olib tashlang.
+    { icon: Building2, label: "TravelLine (PMS)", color: "text-teal-600", bg: "bg-teal-600/10", x: -100, y: 130, delay: 0.8, planned: true },
+    { icon: Server, label: "Opera (PMS)", color: "text-indigo-600", bg: "bg-indigo-600/10", x: 100, y: 130, delay: 1.0, planned: true }
   ];
 
   return (
@@ -102,13 +111,18 @@ export function IntegrationsAnimated() {
                   transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: "easeInOut" }}
                   className="flex flex-col items-center gap-2 group cursor-pointer"
                 >
-                  <div className={`w-16 h-16 rounded-2xl ${item.bg} border border-background shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden`}>
+                  <div className={`w-16 h-16 rounded-2xl ${item.bg} border border-background shadow-lg flex items-center justify-center group-hover:scale-110 group-hover:-translate-y-2 transition-transform duration-300 relative overflow-hidden ${item.planned ? 'opacity-45 grayscale' : ''}`}>
                     <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <Icon className={`w-7 h-7 ${item.color}`} />
                   </div>
-                  <span className="text-[11px] font-bold text-muted-foreground group-hover:text-foreground transition-colors px-3 py-1 bg-background/80 backdrop-blur rounded-full border shadow-sm">
+                  <span className={`text-[11px] font-bold transition-colors px-3 py-1 bg-background/80 backdrop-blur rounded-full border shadow-sm ${item.planned ? 'text-muted-foreground/60' : 'text-muted-foreground group-hover:text-foreground'}`}>
                     {item.label}
                   </span>
+                  {item.planned && (
+                    <span className="text-[9px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                      {tx.planned}
+                    </span>
+                  )}
                 </motion.div>
               </motion.div>
             );

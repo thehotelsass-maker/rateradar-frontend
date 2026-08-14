@@ -10,19 +10,19 @@ const TXT = {
     title: "Tizim qanday ko'rinishga ega?",
     desc: "RateRadar - bu oddiy quruq raqamlar emas, o'ta chiroyli va qulay interfeysli tahlil tizimi. Har bir funksiya mehmonxona boshqaruvini zavqliroq qilish uchun dizayn qilingan.",
     tabPrices: 'Narxlar tahlili', tabReviews: 'Sharhlar', tabAi: 'AI maslahatlar',
-    aiCard: 'Gemini Strategiyasi',
+    aiCard: 'AI Strategiyasi',
   },
   ru: {
     title: 'Как выглядит система?',
     desc: 'RateRadar — это не сухие цифры, а красивая и удобная аналитическая система. Каждая функция создана, чтобы управление отелем приносило удовольствие.',
     tabPrices: 'Анализ цен', tabReviews: 'Отзывы', tabAi: 'AI советы',
-    aiCard: 'Стратегия Gemini',
+    aiCard: 'AI-стратегия',
   },
   en: {
     title: 'What does the system look like?',
     desc: 'RateRadar is not dry numbers — it is a beautiful, easy-to-use analytics system. Every feature is designed to make hotel management enjoyable.',
     tabPrices: 'Price analytics', tabReviews: 'Reviews', tabAi: 'AI advice',
-    aiCard: 'Gemini Strategy',
+    aiCard: 'AI Strategy',
   },
 };
 

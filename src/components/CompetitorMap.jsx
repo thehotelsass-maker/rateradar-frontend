@@ -170,7 +170,8 @@ export default function CompetitorMap({
     if (hasMyCoords) {
       bounds.push([myLat, myLng]);
 
-      // 600 m raqib radiusi — shu doira ichidagilar auto-raqib bo'ladi.
+      // Raqib radiusi (COMPETITOR_RADIUS_M) — shu doira ichidagilar auto-raqib
+      // bo'ladi. Qiymat backend AUTO_DISCOVERY_RADIUS_KM bilan bir xil turishi shart.
       const radiusCircle = L.circle([myLat, myLng], {
         radius: COMPETITOR_RADIUS_M,
         color: '#6366f1',

@@ -38,9 +38,9 @@ const translations = {
     featuresSub: 'Hotelingizning bozordagi pozitsiyasini yaxshilash uchun bir to\'liq vosita',
 
     feature1Title: 'Real vaqt narx monitoring',
-    feature1Desc: 'Booking, Expedia, Agoda va boshqa platformalardagi raqib narxlari har 2 soatda yangilanadi',
+    feature1Desc: 'Booking, Expedia, Agoda va boshqa platformalardagi raqib narxlarini bir tugma bilan darhol yangilang — haftalik avtomatik yangilanish ham ishlaydi',
     feature2Title: 'AI tavsiyalari',
-    feature2Desc: 'Gemini AI bozor pozitsiyangizni o\'rganadi va kunlik narx strategiyasini taklif qiladi',
+    feature2Desc: 'AI bozor pozitsiyangizni o\'rganadi va narx strategiyasini taklif qiladi',
     feature3Title: 'Sharhlar tahlili',
     feature3Desc: 'Mijoz sharhlari avtomatik tarjima qilinadi, sentiment va asosiy mavzular ajratiladi',
     feature4Title: 'Raqib aniqlash',
@@ -315,9 +315,9 @@ const translations = {
     rooms: 'Xonalar soni',
 
     phase2Title: 'Real OTA narxlar',
-    phase2Desc: 'Booking.com, Expedia, Agoda va boshqa platformalardan har 2 soatda narxlarni avtomatik yig\'amiz',
+    phase2Desc: 'Booking.com, Expedia, Agoda va boshqa platformalardan narxlarni yig\'amiz — talab bo\'yicha darhol, ustiga haftalik avtomatik',
     phase3Title: 'Sharhlar va sentiment tahlili',
-    phase3Desc: 'Gemini AI yordamida mijoz sharhlarini tahlil qilib, kuchli va zaif tomonlaringizni aniqlaymiz',
+    phase3Desc: 'AI yordamida mijoz sharhlarini tahlil qilib, kuchli va zaif tomonlaringizni aniqlaymiz',
     phase3AITitle: 'AI dan strategik tavsiyalar',
     phase3AIDesc: 'Bozor pozitsiyangiz bo\'yicha kunlik narx strategiyasi va aksiyalar tavsiyasi',
 
@@ -415,9 +415,9 @@ const translations = {
     featuresSub: 'A complete toolkit to improve your market position',
 
     feature1Title: 'Real-time price monitoring',
-    feature1Desc: 'Competitor prices from Booking, Expedia, Agoda and others — refreshed every 2 hours',
+    feature1Desc: 'Competitor prices from Booking, Expedia, Agoda and others — refresh instantly with one click, plus automatic weekly updates',
     feature2Title: 'AI recommendations',
-    feature2Desc: 'Gemini AI studies your market position and suggests daily pricing strategies',
+    feature2Desc: 'AI studies your market position and suggests pricing strategies',
     feature3Title: 'Review analysis',
     feature3Desc: 'Customer reviews are auto-translated, with sentiment and key topics extracted',
     feature4Title: 'Competitor discovery',
@@ -692,9 +692,9 @@ const translations = {
     rooms: 'Number of rooms',
 
     phase2Title: 'Real OTA prices',
-    phase2Desc: 'We auto-collect prices from Booking.com, Expedia, Agoda and other platforms every 2 hours',
+    phase2Desc: 'We collect prices from Booking.com, Expedia, Agoda and other platforms — on demand instantly, plus automatically every week',
     phase3Title: 'Reviews and sentiment',
-    phase3Desc: 'We analyze customer reviews with Gemini AI to identify your strengths and weaknesses',
+    phase3Desc: 'We analyze customer reviews with AI to identify your strengths and weaknesses',
     phase3AITitle: 'Strategic AI recommendations',
     phase3AIDesc: 'Daily pricing strategy and promotion suggestions based on your market position',
 
@@ -787,9 +787,9 @@ const translations = {
     featuresSub: 'Полный набор инструментов для улучшения вашей рыночной позиции',
 
     feature1Title: 'Мониторинг цен в реальном времени',
-    feature1Desc: 'Цены конкурентов с Booking, Expedia, Agoda и др. — обновляются каждые 2 часа',
+    feature1Desc: 'Цены конкурентов с Booking, Expedia, Agoda и др. — обновляйте мгновенно одной кнопкой, плюс автоматическое еженедельное обновление',
     feature2Title: 'AI-рекомендации',
-    feature2Desc: 'Gemini AI изучает вашу позицию и предлагает ежедневные ценовые стратегии',
+    feature2Desc: 'AI изучает вашу позицию и предлагает ценовые стратегии',
     feature3Title: 'Анализ отзывов',
     feature3Desc: 'Отзывы клиентов автоматически переводятся, выделяются настроения и темы',
     feature4Title: 'Поиск конкурентов',
@@ -1064,9 +1064,9 @@ const translations = {
     rooms: 'Количество номеров',
 
     phase2Title: 'Реальные цены OTA',
-    phase2Desc: 'Автоматически собираем цены с Booking.com, Expedia, Agoda и других платформ каждые 2 часа',
+    phase2Desc: 'Собираем цены с Booking.com, Expedia, Agoda и других платформ — по запросу мгновенно, плюс автоматически раз в неделю',
     phase3Title: 'Анализ отзывов',
-    phase3Desc: 'Анализируем отзывы клиентов с помощью Gemini AI и определяем сильные и слабые стороны',
+    phase3Desc: 'Анализируем отзывы клиентов с помощью AI и определяем сильные и слабые стороны',
     phase3AITitle: 'Стратегические рекомендации AI',
     phase3AIDesc: 'Ежедневная стратегия цен и акций на основе вашей рыночной позиции',
 

@@ -147,7 +147,7 @@ const CONTENT = {
     },
     ai: {
       title: 'AI Tahlil',
-      subtitle: 'Gemini AI yordamida bozor strategiyasini oling',
+      subtitle: 'AI yordamida bozor strategiyasini oling',
       steps: [
         { title: 'Tahlilni boshlash', desc: '"Tahlil qilish" tugmasini bosing — AI hozirgi narxlar, raqiblar va bozor holatini o\'rganadi.' },
         { title: 'Tavsiyalarni o\'qing', desc: 'AI bir necha bo\'limda tavsiya beradi: narx strategiyasi, raqobat holati, kuchli tomonlar va takomillashtirish kerak bo\'lgan joylar.' },
@@ -244,7 +244,7 @@ const CONTENT = {
     },
     ai: {
       title: 'AI-анализ',
-      subtitle: 'Получите рыночную стратегию с помощью Gemini AI',
+      subtitle: 'Получите рыночную стратегию с помощью AI',
       steps: [
         { title: 'Запустить анализ', desc: 'Нажмите «Анализировать» — AI изучит текущие цены, конкурентов и состояние рынка.' },
         { title: 'Читайте рекомендации', desc: 'AI даёт рекомендации по нескольким разделам: ценовая стратегия, конкурентная ситуация, сильные стороны и зоны для улучшения.' },
@@ -341,7 +341,7 @@ const CONTENT = {
     },
     ai: {
       title: 'AI Analysis',
-      subtitle: 'Get a market strategy powered by Gemini AI',
+      subtitle: 'Get a market strategy powered by AI',
       steps: [
         { title: 'Start the analysis', desc: 'Click "Analyze" — the AI studies current prices, competitors, and market conditions.' },
         { title: 'Read the recommendations', desc: 'The AI gives recommendations across several areas: pricing strategy, competitive position, strengths, and areas to improve.' },

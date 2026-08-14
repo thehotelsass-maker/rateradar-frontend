@@ -27,8 +27,21 @@ export default function CountUp({
 
   useEffect(() => {
     const to = Number(value) || 0;
-    if (!inView) return;
     if (reduce) { setDisplay(to); fromRef.current = to; return; }
+
+    // ⚠️ Ilgari bu yerda shunchaki `if (!inView) return;` turardi. Agar
+    // IntersectionObserver ishga tushmasa (bot/skreyper, eski brauzer, element
+    // hech qachon "ko'rindi" deb belgilanmasa), `display` boshlang'ich 0 da
+    // ABADIY qotib qolardi — landing'dagi "0+ OTA", "0m radius", "0 til" aynan
+    // shundan. Endi zaxira taymer bor: kuzatuvchi ishlamasa ham HAQIQIY raqam
+    // chiqadi. Animatsiya — bezak, raqamning ko'rinishi esa majburiy.
+    if (!inView) {
+      const fallback = setTimeout(() => {
+        setDisplay(to);
+        fromRef.current = to;
+      }, 1200);
+      return () => clearTimeout(fallback);
+    }
 
     const controls = animate(fromRef.current, to, {
       duration,

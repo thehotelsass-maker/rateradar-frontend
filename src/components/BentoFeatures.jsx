@@ -10,9 +10,9 @@ const TXT = {
     title: "Sizga kerak bo'lgan hamma narsa",
     desc: "Hotelingizning bozordagi pozitsiyasini yaxshilash uchun mo'ljallangan to'liq vosita. Asosiy e'tibor avtomatlashtirish va AI orqali tezkor qarorlar qabul qilishga qaratilgan.",
     f1t: 'Real vaqt narx monitoringi',
-    f1d: "Raqobatchilaringiz qachon narxni tushirayotganini darhol bilib oling. Booking, Expedia va Agoda narxlari har 2 soatda avtomatik yangilanib turadi.",
+    f1d: "Raqobatchilaringiz qachon narxni tushirayotganini bilib oling. Booking, Expedia va Agoda narxlarini istalgan payt bir tugma bilan yangilaysiz, haftalik yangilanish esa avtomatik ishlaydi.",
     f2t: 'AI tavsiyalari',
-    f2d: "Gemini sizning bozor pozitsiyangizni o'rganadi va kunlik narx strategiyasini yozib beradi. O'ylashga vaqt ketkazmaysiz.",
+    f2d: "AI sizning bozor pozitsiyangizni o'rganadi va narx strategiyasini yozib beradi. O'ylashga vaqt ketkazmaysiz.",
     f3t: 'Multi-OTA',
     f3d: "6+ platforma (Booking, Expedia, Agoda...) qo'llab-quvvatlanadi.",
     f4t: 'Sharhlar Tahlili',
@@ -26,9 +26,9 @@ const TXT = {
     title: 'Всё, что вам нужно',
     desc: 'Полный инструмент для улучшения позиции вашего отеля на рынке. Главный фокус — автоматизация и быстрые решения с помощью AI.',
     f1t: 'Мониторинг цен в реальном времени',
-    f1d: 'Мгновенно узнавайте, когда конкуренты снижают цены. Цены Booking, Expedia и Agoda обновляются автоматически каждые 2 часа.',
+    f1d: 'Узнавайте, когда конкуренты снижают цены. Цены Booking, Expedia и Agoda обновляются одной кнопкой в любой момент, а еженедельное обновление работает автоматически.',
     f2t: 'AI-рекомендации',
-    f2d: 'Gemini изучает вашу позицию на рынке и пишет ежедневную ценовую стратегию. Не тратьте время на раздумья.',
+    f2d: 'AI изучает вашу позицию на рынке и пишет ценовую стратегию. Не тратьте время на раздумья.',
     f3t: 'Multi-OTA',
     f3d: 'Поддерживается 6+ платформ (Booking, Expedia, Agoda...).',
     f4t: 'Анализ отзывов',
@@ -42,9 +42,9 @@ const TXT = {
     title: 'Everything you need',
     desc: 'A complete toolkit to improve your hotel\'s market position. The focus is automation and fast decisions powered by AI.',
     f1t: 'Real-time price monitoring',
-    f1d: 'Know instantly when competitors drop their prices. Booking, Expedia and Agoda prices update automatically every 2 hours.',
+    f1d: 'Know when competitors drop their prices. Refresh Booking, Expedia and Agoda prices any time with one click — weekly updates run automatically.',
     f2t: 'AI recommendations',
-    f2d: 'Gemini studies your market position and writes a daily pricing strategy. No time wasted on guesswork.',
+    f2d: 'AI studies your market position and writes a pricing strategy. No time wasted on guesswork.',
     f3t: 'Multi-OTA',
     f3d: '6+ platforms supported (Booking, Expedia, Agoda...).',
     f4t: 'Review analytics',
@@ -107,7 +107,11 @@ export function BentoFeatures() {
                 <div className="w-12 h-12 rounded-2xl bg-violet-500/10 text-violet-500 flex items-center justify-center group-hover:rotate-12 transition-transform">
                   <Sparkles className="w-6 h-6" />
                 </div>
-                <span className="px-3 py-1 bg-violet-500/10 text-violet-600 text-xs font-bold rounded-full">Gemini AI</span>
+                {/* Model nomi ATAYLAB yozilmaydi: mahsulot ikkala provayderni
+                    ishlatadi va mijoz uchun natija muhim, model brendi emas.
+                    Ilgari bu yerda "Gemini AI" turardi, `/ai/status` esa boshqa
+                    modelni qaytarardi — ochiq endpointda tekshirilishi oson edi. */}
+                <span className="px-3 py-1 bg-violet-500/10 text-violet-600 text-xs font-bold rounded-full">AI</span>
               </div>
               <h3 className="text-xl font-bold mb-2">{tx.f2t}</h3>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6">

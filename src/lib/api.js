@@ -85,6 +85,9 @@ export const hotelApi = {
     api
       .get("/hotels/me/category-ratings", { params: refresh ? { refresh: true } : {}, timeout: 90 * 1000 })
       .then((r) => r.data),
+  // Haftalik to'lish darajasi (occupancy) — narx tavsiyasining ikkinchi yarmi.
+  getOccupancy: () => api.get("/hotels/me/occupancy").then((r) => r.data),
+  setOccupancy: (band) => api.put("/hotels/me/occupancy", { band }).then((r) => r.data),
   otaChannels: (opts = {}) =>
     api.get("/hotels/me/ota-channels", { params: { lite: opts.lite !== false } }).then((r) => r.data),
   fetchOtaChannel: (source) =>

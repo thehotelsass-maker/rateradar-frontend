@@ -2,42 +2,37 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, TrendingUp, Zap, MapPin } from 'lucide-react';
 
-const notifications = [
-  {
-    title: "Yangi mijoz!",
-    message: "Toshkentdagi Dendi Plaza tizimga ulandi",
-    time: "Hozirgina",
-    icon: CheckCircle2,
-    color: "text-green-500",
-    bg: "bg-green-500/10"
-  },
-  {
-    title: "AI strategiyasi",
-    message: "Samarqanddagi hotel narxlarini avtomatlashtirdi",
-    time: "2 daqiqa oldin",
-    icon: Zap,
-    color: "text-blue-500",
-    bg: "bg-blue-500/10"
-  },
-  {
-    title: "Daromad o'sishi",
-    message: "Buxorodagi hotel AI bilan yangi daromad rekordini o'rnatdi",
-    time: "15 daqiqa oldin",
-    icon: TrendingUp,
-    color: "text-violet-500",
-    bg: "bg-violet-500/10"
-  },
-  {
-    title: "Tizim ulanishi",
-    message: "Xivadagi mehmonxona TravelLine (PMS) ga ulandi",
-    time: "45 daqiqa oldin",
-    icon: MapPin,
-    color: "text-rose-500",
-    bg: "bg-rose-500/10"
-  }
-];
+// ════════════════════════════════════════════════════════════════════
+// ⚠️ SOXTA "JONLI FAOLIYAT" BILDIRISHNOMALARI O'CHIRILDI (2026-08-12)
+//
+// Bu komponent har 10-20 soniyada tasodifiy "yangi mijoz ulandi" oynachasini
+// chiqarardi. Hammasi TO'QIB CHIQARILGAN edi, va uchtasi alohida xavfli:
+//
+//   1. "Toshkentdagi Dendi Plaza tizimga ulandi" — Dendi Plaza BUXOROda.
+//      Ya'ni yagona real mijozning shahri ham noto'g'ri yozilgan.
+//   2. "Xivadagi mehmonxona TravelLine (PMS) ga ulandi" — PMS integratsiyasi
+//      MAVJUD EMAS (birorta endpoint yo'q). Bu yo'q funksiyani sotish demak.
+//   3. "Buxorodagi hotel AI bilan yangi daromad rekordini o'rnatdi" — dalilsiz
+//      daromad da'vosi, "20% oshdi" bilan bir sinfda.
+//
+// Bunday oynachalar B2B xaridorda ishonch emas, "scam signal" uyg'otadi —
+// ayniqsa mahsulot yangi va noma'lum brend bo'lsa.
+//
+// QAYTA YOQISH: faqat HAQIQIY hodisalar bilan. Backend'da yangi mehmonxona
+// ro'yxatdan o'tganda anonim hodisa yozilsin ("Buxorodagi mehmonxona ulandi",
+// nom ko'rsatilmasin — mijoz roziligisiz nom chiqarish mumkin emas), va shu
+// oqim ko'rsatilsin. Yo'q bo'lsa — hech narsa ko'rsatilmasin.
+// ════════════════════════════════════════════════════════════════════
+const notifications = [];
 
 export function FomoNotifications() {
+  // Haqiqiy hodisa oqimi yo'q ekan — hech narsa ko'rsatilmaydi.
+  if (!notifications.length) return null;
+
+  return <FomoNotificationsInner />;
+}
+
+function FomoNotificationsInner() {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [isVisible, setIsVisible] = useState(false);
 

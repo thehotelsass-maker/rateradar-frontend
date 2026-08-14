@@ -21,7 +21,7 @@ import AiAdvisor from '@/components/AiAdvisor';
 import { hotelApi, searchApi } from '@/lib/api';
 import { useT, useLang } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
-import { limitsFor, allows } from '@/lib/planLimits';
+import { limitsFor, allows, isUnlimited } from '@/lib/planLimits';
 import { PlanLock } from '@/components/PlanLock';
 import { cn, useFormatPrice } from '@/lib/utils';
 import { getOtaBrand } from '@/lib/otaBrands';
@@ -868,7 +868,7 @@ export default function Competitors() {
   const lang = useLang((s) => s.lang);
   const user = useAuth((s) => s.user);
   const navigate = useNavigate();
-  // Tarif chegarasi: raqiblar soni (Starter 3). 0 = cheksiz.
+  // Tarif chegarasi: raqiblar soni (Free 1, Starter 3, Pro 10, Business cheksiz).
   const maxComp = limitsFor(user).maxCompetitors;
   // Ko'rsatiladigan OTA kanallar (Starter: booking+expedia). null = hammasi.
   const planChannels = limitsFor(user).channels;
@@ -1094,14 +1094,18 @@ export default function Competitors() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, competitors.length]);
 
-  // Tarif chegarasi bo'yicha ko'rsatiladigan raqiblar (Starter 3).
-  const overLimit = maxComp > 0 && competitors.length > maxComp;
+  // Tarif chegarasi bo'yicha ko'rsatiladigan raqiblar.
+  // DIQQAT: cheksizlik = UNLIMITED (null), `0` EMAS. `maxComp > 0` tekshiruvi
+  // 0 ni ham "cheksiz" deb qabul qilardi — shuning uchun isUnlimited() ishlatiladi.
+  const unlimited = isUnlimited(maxComp);
+  const overLimit = !unlimited && competitors.length > maxComp;
   const hiddenCount = overLimit ? competitors.length - maxComp : 0;
-  const visibleCompetitors = maxComp > 0 ? competitors.slice(0, maxComp) : competitors;
-  const atAddLimit = maxComp > 0 && competitors.length >= maxComp;
-  const limitMsg = lang === 'uz' ? `Starter tarifida ${maxComp} ta raqib kuzatiladi. Ko'proq uchun tarifni ko'taring.`
-    : lang === 'ru' ? `В тарифе Starter — ${maxComp} конкурента. Повысьте тариф для большего.`
-    : `Starter plan tracks ${maxComp} competitors. Upgrade for more.`;
+  const visibleCompetitors = unlimited ? competitors : competitors.slice(0, maxComp);
+  const atAddLimit = !unlimited && competitors.length >= maxComp;
+  // Tarif nomi qattiq yozilmasin — xabar Free'da ham, Starter'da ham chiqadi.
+  const limitMsg = lang === 'uz' ? `Tarifingizda ${maxComp} ta raqib kuzatiladi. Ko'proq uchun tarifni ko'taring.`
+    : lang === 'ru' ? `В вашем тарифе — ${maxComp} конкурент(ов). Повысьте тариф для большего.`
+    : `Your plan tracks ${maxComp} competitor(s). Upgrade for more.`;
 
   return (
     <div className="space-y-5 animate-fade-in">
