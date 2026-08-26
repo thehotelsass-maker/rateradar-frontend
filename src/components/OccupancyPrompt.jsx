@@ -13,6 +13,10 @@ import { cn } from '@/lib/utils';
  * asos emas — aksincha. Bu javob tavsiyani revenue qaroriga aylantiradi.
  *
  * PMS integratsiyasi talab qilinmaydi: haftada bitta bosish yetarli.
+ *
+ * ⬆ 2026-08 dan: Exely ulangan mijozda bu SO'RALMAYDI. To'lish darajasi
+ * bronlardan o'lchanadi va bu yerda faqat NATIJA ko'rsatiladi. Qo'lda
+ * so'rov Exely'siz mijozlar uchun qoladi.
  */
 const TXT = {
   uz: {
@@ -22,6 +26,8 @@ const TXT = {
     lowSub: 'bo\'sh xona ko\'p', midSub: 'normal', highSub: 'to\'lib boryapti',
     saved: 'Saqlandi — tavsiyalar yangilanmoqda',
     current: 'Bu hafta:', change: 'O\'zgartirish',
+    measured: 'Kelasi 7 kun', ofPace: 'o\'tgan yilgi shu bosqichga nisbatan',
+    src: 'Exely bronlaridan o\'lchandi',
   },
   ru: {
     q: 'Какая у вас заполняемость на ближайшие 7 дней?',
@@ -30,6 +36,8 @@ const TXT = {
     lowSub: 'много свободных', midSub: 'нормально', highSub: 'заполняется',
     saved: 'Сохранено — рекомендации обновляются',
     current: 'На этой неделе:', change: 'Изменить',
+    measured: 'Ближайшие 7 дней', ofPace: 'к тому же этапу год назад',
+    src: 'Измерено по броням Exely',
   },
   en: {
     q: 'What is your occupancy for the next 7 days?',
@@ -38,6 +46,8 @@ const TXT = {
     lowSub: 'many rooms free', midSub: 'normal', highSub: 'filling up',
     saved: 'Saved — recommendations updating',
     current: 'This week:', change: 'Change',
+    measured: 'Next 7 days', ofPace: 'vs the same point last year',
+    src: 'Measured from Exely bookings',
   },
 };
 
@@ -76,6 +86,33 @@ export default function OccupancyPrompt({ onChange }) {
   }
 
   if (!state) return null;
+
+  // ── O'LCHANGAN HOLAT (Exely) ───────────────────────────────────────
+  // Bu yerda tugma yo'q: foydalanuvchining taxmini aniq o'lchovning
+  // ustiga yozilishi mumkin emas.
+  const cur = state.current;
+  if (cur?.source === 'exely') {
+    const pace = cur.pace;
+    const ratioPct = pace?.ratio != null ? Math.round((pace.ratio - 1) * 100) : null;
+    const tone = cur.band === 'high' ? 'text-emerald-600 dark:text-emerald-400'
+      : cur.band === 'low' ? 'text-rose-600 dark:text-rose-400'
+      : 'text-foreground';
+    return (
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <BedDouble className="h-3.5 w-3.5" />
+          {tx.measured}: <b className={cn('text-sm tabular-nums', tone)}>{cur.occupancyPct}%</b>
+          <span className="text-muted-foreground">({cur.roomNights}/{cur.capacity * cur.forwardDays})</span>
+        </span>
+        {ratioPct != null && (
+          <span className={cn('tabular-nums', tone)}>
+            {ratioPct > 0 ? '+' : ''}{ratioPct}% <span className="text-muted-foreground">{tx.ofPace}</span>
+          </span>
+        )}
+        <span className="text-[10px] opacity-70">· {tx.src}</span>
+      </div>
+    );
+  }
 
   const asking = state.shouldAsk || expanded;
 

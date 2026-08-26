@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, TrendingUp, MessageSquare, Sparkles,
   Settings, Globe, Shield, X, BookOpen, Map, Bell, ConciergeBell,
-  ChevronRight, CreditCard, ShieldAlert,
+  ChevronRight, CreditCard, ShieldAlert, Plug,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { useT } from '@/lib/i18n';
@@ -86,6 +86,7 @@ export function Sidebar({ mobileOpen, collapsed, onClose }) {
             { to: '/dashboard', icon: LayoutDashboard, label: t('overview') },
             { to: '/competitors', icon: Users, label: t('competitors') },
             { to: '/prices', icon: TrendingUp, label: t('rateShopper') },
+            { to: '/exely', icon: Plug, label: t('exelyNav') },
             { to: '/hotel-service', icon: ConciergeBell, label: t('hotelService') },
             { to: '/rating-map', icon: Map, label: t('ratingMap') },
           ],

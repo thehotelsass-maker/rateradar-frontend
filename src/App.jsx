@@ -25,6 +25,7 @@ import Settings from '@/pages/Settings';
 import Billing from '@/pages/Billing';
 import Guide from '@/pages/Guide';
 import Xotelo from '@/pages/Xotelo';
+import Exely from '@/pages/Exely';
 import RatingMap from '@/pages/RatingMap';
 import Notifications from '@/pages/Notifications';
 import HotelServiceApp from '@/hotelService/HotelServiceApp';
@@ -83,6 +84,8 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/competitors" element={<Competitors />} />
           <Route path="/prices" element={<Prices />} />
+          {/* Exely — o'z bronlarim tahlili (PMS/Channel Manager) */}
+          <Route path="/exely" element={<Exely />} />
           <Route path="/ota-channels" element={<OtaChannels />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/notifications" element={<Notifications />} />

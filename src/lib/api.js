@@ -258,6 +258,53 @@ export const paymentApi = {
     api.patch("/payments/auto-renew", { enabled }).then((r) => r.data),
 };
 
+// ─── O'z ko'rsatkichlarim (Exely bronlaridan hisoblanadi) ────────────
+// Bu ma'lumot skreypingdan kelmaydi — mehmonxonaning O'Z PMS/Channel
+// Manager bronlari. Shuning uchun Exely ulanmagan bo'lsa 409 qaytadi.
+export const metricsApi = {
+  daily: (from, to, asOf) =>
+    api.get("/metrics/daily", { params: { from, to, ...(asOf && { asOf }) }, timeout: 60 * 1000 })
+      .then((r) => r.data),
+  summary: (from, to) =>
+    api.get("/metrics/summary", { params: { from, to }, timeout: 60 * 1000 }).then((r) => r.data),
+  // STLY taqqoslash og'ir aggregatsiya — timeout kattaroq.
+  pickup: (opts = {}) =>
+    api.get("/metrics/pickup", {
+      params: { ...(opts.from && { from: opts.from }), ...(opts.to && { to: opts.to }), ...(opts.stly && { stly: 1 }) },
+      timeout: 3 * 60 * 1000,
+    }).then((r) => r.data),
+  capacity: () => api.get("/metrics/capacity").then((r) => r.data),
+  // Kesim: dim = channel | roomType | ratePlan | dow | month
+  breakdown: (dim, from, to) =>
+    api.get("/metrics/breakdown", {
+      params: { dim, ...(from && { from }), ...(to && { to }) }, timeout: 90 * 1000,
+    }).then((r) => r.data),
+  // Diqqat talab qiladigan kunlar — "bugun qaysi kunlarga qarashim kerak"
+  actions: (days = 21, lang = 'uz') =>
+    api.get("/metrics/actions", { params: { days, lang }, timeout: 90 * 1000 }).then((r) => r.data),
+  distributions: (from, to) =>
+    api.get("/metrics/distributions", {
+      params: { ...(from && { from }), ...(to && { to }) }, timeout: 90 * 1000,
+    }).then((r) => r.data),
+  warmFx: () => api.post("/metrics/warm-fx").then((r) => r.data),
+};
+
+// ─── Tashqi tizim ulanishlari (Exely) ───────────────────────────────
+export const integrationApi = {
+  exely: () => api.get("/integrations/exely").then((r) => r.data.integration),
+  // Kalitlar tekshirilib, so'ng SHIFRLANIB saqlanadi — javobda qaytmaydi.
+  connectExely: (clientId, clientSecret, propertyId) =>
+    api.post("/integrations/exely", { clientId, clientSecret, ...(propertyId && { propertyId }) },
+      { timeout: 90 * 1000 }).then((r) => r.data),
+  syncExely: () => api.post("/integrations/exely/sync").then((r) => r.data),
+  diagnostics: () => api.get("/integrations/exely/diagnostics", { timeout: 60 * 1000 }).then((r) => r.data),
+  // Obyekt profili (xona turlari, tariflar) — alohida, chunki holat
+  // so'rovi tez-tez polling qilinadi va bu ro'yxatlar og'ir.
+  exelyProperty: () => api.get("/integrations/exely/property").then((r) => r.data),
+  disconnectExely: (purge = false) =>
+    api.delete("/integrations/exely", { params: purge ? { purge: 1 } : {} }).then((r) => r.data),
+};
+
 export const leadApi = {
   // Landing bog'lanish formasi — egasi pochtasiga (info@thehotelsaas.com) yuboradi.
   submit: (data) => api.post("/leads", data).then((r) => r.data),
