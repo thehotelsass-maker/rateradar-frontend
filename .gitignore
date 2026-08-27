@@ -1,8 +1,43 @@
+# ════════════════════════════════════════════════════
+# Bog'liqliklar va build
+# ════════════════════════════════════════════════════
 node_modules/
 dist/
+dist-ssr/
+.vite/
+
+# ════════════════════════════════════════════════════
+# MAXFIY QIYMATLAR
+#
+# ⚠️ Vite'da VITE_ bilan boshlanadigan har qanday o'zgaruvchi
+# BROWSER BUNDLE'IGA TUSHADI — ya'ni u maxfiy emas. Haqiqiy
+# maxfiy kalitlar hech qachon frontend .env'ga yozilmasin,
+# ular faqat backendda turishi kerak.
+#
+# `.env.example` ATAYIN kuzatiladi — namuna, qiymatsiz.
+# ════════════════════════════════════════════════════
 .env
-.env.local
+.env.*
+!.env.example
+*.local
+
+# Sertifikat va kalit fayllari
+*.pem
+*.key
+
+# ════════════════════════════════════════════════════
+# Log va vaqtinchalik
+# ════════════════════════════════════════════════════
 *.log
+npm-debug.log*
+yarn-error.log*
+.cache/
+tmp/
+
+# ════════════════════════════════════════════════════
+# OS va muharrir
+# ════════════════════════════════════════════════════
 .DS_Store
+Thumbs.db
 .vscode/
 .idea/
