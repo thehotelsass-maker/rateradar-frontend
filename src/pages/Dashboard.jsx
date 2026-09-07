@@ -37,6 +37,9 @@ import { PlanLock } from '@/components/PlanLock';
 import { allows } from '@/lib/planLimits';
 import PriceSignalCard from '@/components/PriceSignalCard';
 import OccupancyPrompt from '@/components/OccupancyPrompt';
+import ActionListCard from '@/components/ActionListCard';
+import PerformanceCard from '@/components/PerformanceCard';
+import PickupCard from '@/components/PickupCard';
 import { useFormatPrice, cn } from '@/lib/utils';
 import { getCache, setCache } from '@/lib/clientCache';
 
@@ -424,6 +427,16 @@ export default function Dashboard() {
           bog'liq. Javob berilgach ixcham qatorga aylanadi, `onChange` esa
           tavsiyani darhol qayta yuklaydi (backend keshni ham bekor qiladi). */}
       <OccupancyPrompt onChange={() => loadOtaAdvice(true)} />
+
+      {/* ═══ MENING KO'RSATKICHLARIM ═══
+          Exely (PMS/Channel Manager) ulangan bo'lsa — o'lchangan occupancy,
+          ADR, RevPAR va bron sur'ati. Ulanmagan bo'lsa PerformanceCard
+          nima berishini tushuntiradi, PickupCard esa jim turadi. */}
+      {/* Kunlik amal ro'yxati ko'rsatkichlardan OLDIN: "nima qilay" savoli
+          "qanday ketyapman" savolidan dolzarbroq. */}
+      <ActionListCard />
+      <PerformanceCard />
+      <PickupCard />
 
       {/* ═══ AI TAVSIYA — HAR BIR OTA KANALI UCHUN ═══
           Raqiblarning aynan shu kanaldagi narxlari tahlil qilinib,

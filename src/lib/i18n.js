@@ -312,7 +312,10 @@ const translations = {
     changesSaved: 'Saqlandi',
     address: 'Manzil',
     starsCount: 'Yulduz miqdori',
+    exelyNav: 'Exely — mening bronlarim',
     rooms: 'Xonalar soni',
+    roomsHint: 'To\'lish darajasi shu songa bo\'linadi — aniq bo\'lsin.',
+    roomsMissing: 'Kiritilmagan — to\'lish darajasi (occupancy) hisoblanmaydi.',
 
     phase2Title: 'Real OTA narxlar',
     phase2Desc: 'Booking.com, Expedia, Agoda va boshqa platformalardan narxlarni yig\'amiz — talab bo\'yicha darhol, ustiga haftalik avtomatik',
@@ -689,7 +692,10 @@ const translations = {
     changesSaved: 'Saved',
     address: 'Address',
     starsCount: 'Number of stars',
+    exelyNav: 'Exely — my bookings',
     rooms: 'Number of rooms',
+    roomsHint: 'Occupancy is divided by this number — keep it exact.',
+    roomsMissing: 'Not set — occupancy cannot be calculated.',
 
     phase2Title: 'Real OTA prices',
     phase2Desc: 'We collect prices from Booking.com, Expedia, Agoda and other platforms — on demand instantly, plus automatically every week',
@@ -1061,7 +1067,10 @@ const translations = {
     changesSaved: 'Сохранено',
     address: 'Адрес',
     starsCount: 'Количество звёзд',
+    exelyNav: 'Exely — мои брони',
     rooms: 'Количество номеров',
+    roomsHint: 'Загрузка делится на это число — укажите точно.',
+    roomsMissing: 'Не указано — загрузка не рассчитывается.',
 
     phase2Title: 'Реальные цены OTA',
     phase2Desc: 'Собираем цены с Booking.com, Expedia, Agoda и других платформ — по запросу мгновенно, плюс автоматически раз в неделю',

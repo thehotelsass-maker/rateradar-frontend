@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth';
 import { useT, useLang } from '@/lib/i18n';
 import { authApi, hotelApi } from '@/lib/api';
+import ExelyIntegration from '@/components/ExelyIntegration';
 
 export default function Settings() {
   const t = useT();
@@ -45,6 +46,9 @@ export default function Settings() {
 
       <ProfileSection user={user} updateUser={updateUser} t={t} />
       {hotel && <HotelSection hotel={hotel} setHotel={setHotel} t={t} />}
+      {/* Exely ulanishi — o'z bronlarim (occupancy/ADR/RevPAR manbai).
+          Mehmonxona bo'limidan keyin: avval obyekt, keyin uning tizimlari. */}
+      {hotel && <ExelyIntegration />}
       <LanguageSection lang={lang} setLang={setLang} t={t} />
       <AccountSection user={user} onLogout={handleLogout} t={t} />
     </div>
@@ -323,10 +327,18 @@ function HotelSection({ hotel, setHotel, t }) {
             <Input
               id="rooms"
               type="number"
-              min="0"
+              min="1"
               value={rooms}
               onChange={(e) => setRooms(e.target.value)}
             />
+            {/* Bu maydon shunchaki ma'lumot emas: to'lish darajasi = sotilgan
+                tun / (xona soni × kun). Nol bo'lsa foiz umuman hisoblanmaydi,
+                shuning uchun nima uchun kerakligi shu yerda aytiladi. */}
+            <p className={`text-[11px] ${Number(rooms) > 0 ? 'text-muted-foreground' : 'text-amber-600 dark:text-amber-400'}`}>
+              {Number(rooms) > 0
+                ? t('roomsHint')
+                : t('roomsMissing')}
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="currentPrice">{t('myPrice')} ($)</Label>

@@ -1,8 +1,22 @@
 node_modules/
-dist/
+
+# ── Maxfiy sozlamalar ────────────────────────────────────────────────
+# Vite'da VITE_ bilan boshlangan o'zgaruvchilar BUNDLE'ga tushadi va
+# brauzerda ko'rinadi — ya'ni bu yerga maxfiy kalit yozib bo'lmaydi.
+# Shunga qaramay .env fayllari repoga tushmasin: ichida manzil va
+# muhitga xos sozlamalar bo'ladi.
 .env
-.env.local
+.env.*
+!.env.example
+
+# ── Qurilish natijasi ────────────────────────────────────────────────
+dist/
+dist-ssr/
+.vite/
 *.log
+*.local
+
+# ── Muhit ───────────────────────────────────────────────────────────
 .DS_Store
 .vscode/
 .idea/

@@ -47,3 +47,20 @@ export function formatDate(date, locale = 'uz') {
     { day: 'numeric', month: 'short', year: 'numeric' }
   );
 }
+
+/**
+ * So'mni ixcham ko'rinishda: 534 000 → "534 ming", 606 000 000 → "606 mln".
+ *
+ * Ilovaning umumiy `formatPrice` har doim DOLLAR qaytaradi (raqiblar narxi
+ * dollarda ko'rsatiladi). Exely ko'rsatkichlari esa so'mda — ular uchun
+ * alohida formatlagich kerak, aks holda "$534000" chiqib qolardi.
+ */
+export function formatUzsCompact(value, lang = 'uz') {
+  const n = Number(value || 0);
+  const u = lang === 'ru' ? { m: 'млн', k: 'тыс' }
+    : lang === 'en' ? { m: 'M', k: 'K' }
+      : { m: 'mln', k: 'ming' };
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)} ${u.m}`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)} ${u.k}`;
+  return String(Math.round(n));
+}
