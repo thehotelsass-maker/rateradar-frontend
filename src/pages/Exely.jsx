@@ -14,6 +14,7 @@ import { metricsApi, integrationApi } from '@/lib/api';
 import { useLang } from '@/lib/i18n';
 import { getCache, setCache } from '@/lib/clientCache';
 import { cn, formatUzsCompact } from '@/lib/utils';
+import ExelyStateCard, { classifyExelyError } from '@/components/ExelyStateCard';
 
 // ════════════════════════════════════════════════════════════════════
 // EXELY — o'z bronlarimdan chiqadigan HAMMA narsa bitta sahifada.
@@ -159,7 +160,8 @@ export default function Exely() {
   const [prop, setProp] = useState(null);
   const [data, setData] = useState(() => getCache(`exelyPage:364`, 30 * 60_000));
   const [loading, setLoading] = useState(true);
-  const [notConnected, setNotConnected] = useState(false);
+  // null = hammasi joyida. Aks holda ExelyStateCard ko'rsatiladigan holat.
+  const [failState, setFailState] = useState(null);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
@@ -191,9 +193,9 @@ export default function Exely() {
         if (!alive) return;
         const next = { summary, channel, roomType, ratePlan, dow, month, dist };
         setData(next); setCache(key, next);
-        setNotConnected(false);
+        setFailState(null);
       })
-      .catch((err) => { if (alive && err?.response?.status === 409) setNotConnected(true); })
+      .catch((err) => { if (alive) setFailState(classifyExelyError(err)); })
       .finally(() => { if (alive) setLoading(false); });
 
     return () => { alive = false; };
@@ -206,29 +208,14 @@ export default function Exely() {
     setTimeout(() => setSyncing(false), 2000);
   }
 
-  // ── Ulanmagan ────────────────────────────────────────────────────
-  if (notConnected) {
+  // ── Ma'lumot yo'q: sabab QANDAY bo'lishidan qat'i nazar tushuntiriladi ──
+  // Ilgari bu yerda faqat 409 tekshirilardi va boshqa xatoda sahifa
+  // butunlay bo'sh qolardi (real hodisa: server yangilanmagan → 404 → oq ekran).
+  if (failState) {
     return (
       <div className="space-y-6 animate-fade-in max-w-3xl">
         <h1 className="text-2xl font-semibold tracking-tight">Exely</h1>
-        <Card className="border-dashed">
-          <CardContent className="p-6 flex items-start gap-3">
-            <div className="rounded-lg bg-primary/10 p-2 mt-0.5"><Plug className="h-4 w-4 text-primary" /></div>
-            <div>
-              <div className="font-semibold text-sm">
-                {L('Exely hali ulanmagan', 'Exely ещё не подключён', 'Exely is not connected yet')}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                {L('Ulangach bu sahifada o‘z bronlaringiz tahlili paydo bo‘ladi: qaysi kanal pul keltiradi, qaysi xona turi bo‘sh qoladi, mehmonlar qachon bron qiladi va qaysi tarif ishlaydi.',
-                   'После подключения здесь появится анализ ваших броней: какой канал приносит доход, какой тип номера простаивает, когда бронируют гости и какой тариф работает.',
-                   'Once connected, this page shows the analysis of your own bookings: which channel earns, which room type sits empty, when guests book, which rate plan works.')}
-              </p>
-              <Link to="/settings" className="inline-block mt-3 text-xs font-medium text-primary hover:underline">
-                {L('Sozlamalar → Integratsiyalar', 'Настройки → Интеграции', 'Settings → Integrations')} →
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <ExelyStateCard state={failState} />
       </div>
     );
   }
@@ -240,7 +227,14 @@ export default function Exely() {
       </div>
     );
   }
-  if (!data) return null;
+  // Bu yerga yetib kelib ma'lumot bo'lmasa — kutilmagan holat, lekin
+  // baribir bo'sh ekran ko'rsatmaymiz.
+  if (!data) return (
+    <div className="space-y-6 animate-fade-in max-w-3xl">
+      <h1 className="text-2xl font-semibold tracking-tight">Exely</h1>
+      <ExelyStateCard state="error" />
+    </div>
+  );
 
   const s = data.summary;
   const pending = integ?.pendingDetails || 0;

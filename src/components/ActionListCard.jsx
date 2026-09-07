@@ -5,6 +5,7 @@ import { metricsApi } from '@/lib/api';
 import { useLang } from '@/lib/i18n';
 import { getCache, setCache } from '@/lib/clientCache';
 import { cn } from '@/lib/utils';
+import ExelyStateCard, { classifyExelyError } from '@/components/ExelyStateCard';
 
 /**
  * DIQQAT TALAB QILADIGAN KUNLAR.
@@ -61,19 +62,23 @@ export default function ActionListCard() {
 
   const [data, setData] = useState(() => getCache(`actions:${lang}`, 30 * 60_000));
   const [loading, setLoading] = useState(!data);
-  const [hidden, setHidden] = useState(false);
+  const [failState, setFailState] = useState(null);
 
   useEffect(() => {
     let alive = true;
     metricsApi.actions(21, lang)
       .then((d) => { if (alive) { setData(d); setCache(`actions:${lang}`, d); } })
-      .catch((err) => { if (alive && err?.response?.status === 409) setHidden(true); })
+      .catch((err) => { if (alive) setFailState(classifyExelyError(err)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [lang]);
 
   // Exely ulanmagan — PerformanceCard buni allaqachon tushuntiradi.
-  if (hidden) return null;
+  // Ulanmagan bo'lsa JIM turamiz — PerformanceCard buni allaqachon
+  // tushuntiradi va bitta xabarni ikki marta ko'rsatish keraksiz.
+  // Boshqa xatolarda esa jimlik = bo'sh ekran, shuning uchun aytamiz.
+  if (failState === 'not_connected') return null;
+  if (failState) return <ExelyStateCard state={failState} compact />;
 
   if (loading) {
     return (
@@ -82,7 +87,7 @@ export default function ActionListCard() {
       </CardContent></Card>
     );
   }
-  if (!data) return null;
+  if (!data) return null; // ma'lumot yetarli emas — karta ko'rsatilmaydi
 
   const groups = data.groups || [];
   const urgent = groups.filter((g) => g.severity === 'high').length;

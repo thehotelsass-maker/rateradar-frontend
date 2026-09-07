@@ -9,6 +9,7 @@ import { metricsApi, hotelApi } from '@/lib/api';
 import { useLang } from '@/lib/i18n';
 import { getCache, setCache } from '@/lib/clientCache';
 import { cn, formatUzsCompact } from '@/lib/utils';
+import ExelyStateCard, { classifyExelyError } from '@/components/ExelyStateCard';
 
 /**
  * MENING KO'RSATKICHLARIM — occupancy / ADR / RevPAR.
@@ -103,7 +104,7 @@ export default function PerformanceCard() {
   const [data, setData] = useState(() => getCache(cacheKey, 30 * 60_000));
   const [daily, setDaily] = useState(() => getCache(`ownDaily:${days}`, 30 * 60_000));
   const [loading, setLoading] = useState(!data);
-  const [notConnected, setNotConnected] = useState(false);
+  const [failState, setFailState] = useState(null);
   // Xona soni saqlangach metrikani qayta so'raymiz (sig'im maxraji o'zgaradi).
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -126,40 +127,16 @@ export default function PerformanceCard() {
         if (!alive) return;
         setData(s); setCache(cacheKey, s);
         setDaily(d); setCache(`ownDaily:${days}`, d);
-        setNotConnected(false);
+        setFailState(null);
       })
-      .catch((err) => {
-        // 409 — Exely ulanmagan. Bu xato emas, shunchaki hali sozlanmagan.
-        if (alive && err?.response?.status === 409) setNotConnected(true);
-      })
+      .catch((err) => { if (alive) setFailState(classifyExelyError(err)); })
       .finally(() => { if (alive) setLoading(false); });
 
     return () => { alive = false; };
   }, [days, reloadKey]);
 
-  // Ulanmagan bo'lsa — kartani yashirmaymiz, nima berishini aytamiz.
-  if (notConnected) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="p-5 flex items-start gap-3">
-          <div className="rounded-lg bg-primary/10 p-2 mt-0.5"><Link2 className="h-4 w-4 text-primary" /></div>
-          <div className="flex-1">
-            <div className="text-sm font-semibold">
-              {L('O‘z ko‘rsatkichlaringizni ulang', 'Подключите свои показатели', 'Connect your own metrics')}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-              {L('Exely (PMS / Channel Manager) ulansa — to‘lish darajasi, ADR va RevPAR taxmin emas, aniq hisoblanadi. Raqiblar narxi tashqaridan ko‘rinadi, o‘z sotuvingiz esa faqat shu yerdan.',
-                 'После подключения Exely загрузка, ADR и RevPAR считаются точно, а не приблизительно. Цены конкурентов видны снаружи, ваши продажи — только отсюда.',
-                 'Connect Exely (PMS / Channel Manager) and occupancy, ADR and RevPAR become measured, not guessed.')}
-            </p>
-            <Link to="/settings" className="inline-block mt-2.5 text-xs font-medium text-primary hover:underline">
-              {L('Sozlamalar → Integratsiyalar', 'Настройки → Интеграции', 'Settings → Integrations')} →
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Har qanday sabab bilan ma'lumot yo'q — foydalanuvchiga aytiladi.
+  if (failState) return <ExelyStateCard state={failState} />;
 
   if (loading) {
     return (
@@ -168,7 +145,7 @@ export default function PerformanceCard() {
       </CardContent></Card>
     );
   }
-  if (!data) return null;
+  if (!data) return <ExelyStateCard state="error" />;
 
   const chart = (daily?.days || []).map((d) => ({
     date: d.date.slice(5),      // MM-DD — o'q yorlig'i qisqa bo'lsin
