@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { metricsApi } from '@/lib/api';
 import { useLang } from '@/lib/i18n';
 import { getCache, setCache } from '@/lib/clientCache';
+import ExelyStateCard, { classifyExelyError } from '@/components/ExelyStateCard';
 
 /**
  * PICKUP — kitob qanday to'ladi, o'tgan yil bilan yonma-yon.
@@ -42,19 +43,23 @@ export default function PickupCard() {
 
   const [data, setData] = useState(() => getCache('ownPickup', 60 * 60_000));
   const [loading, setLoading] = useState(!data);
-  const [hidden, setHidden] = useState(false);
+  const [failState, setFailState] = useState(null);
 
   useEffect(() => {
     let alive = true;
     metricsApi.pickup({ stly: true })
       .then((d) => { if (alive) { setData(d); setCache('ownPickup', d); } })
-      .catch((err) => { if (alive && err?.response?.status === 409) setHidden(true); })
+      .catch((err) => { if (alive) setFailState(classifyExelyError(err)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
 
   // Exely ulanmagan — PerformanceCard allaqachon buni aytadi, takrorlamaymiz.
-  if (hidden) return null;
+  // Ulanmagan bo'lsa JIM turamiz — PerformanceCard buni allaqachon
+  // tushuntiradi va bitta xabarni ikki marta ko'rsatish keraksiz.
+  // Boshqa xatolarda esa jimlik = bo'sh ekran, shuning uchun aytamiz.
+  if (failState === 'not_connected') return null;
+  if (failState) return <ExelyStateCard state={failState} compact />;
 
   if (loading) {
     return (
@@ -63,7 +68,7 @@ export default function PickupCard() {
       </CardContent></Card>
     );
   }
-  if (!data?.current?.length || !data.lastYear?.length) return null;
+  if (!data?.current?.length || !data.lastYear?.length) return null; // ma'lumot yetarli emas — karta ko'rsatilmaydi
 
   const ly = Object.fromEntries(data.lastYear.map((x) => [x.daysBefore, x]));
 

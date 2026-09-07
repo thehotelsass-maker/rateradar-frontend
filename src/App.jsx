@@ -4,6 +4,8 @@ import { useAuth } from '@/lib/auth';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
 
+
+
 import Landing from '@/pages/Landing';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
@@ -31,6 +33,7 @@ import Notifications from '@/pages/Notifications';
 import HotelServiceApp from '@/hotelService/HotelServiceApp';
 import HotelServiceGuest from '@/hotelService/HotelServiceGuest';
 import TvPage from '@/hotelService/pages/tv/TvPage';
+
 
 export default function App() {
   const refresh = useAuth((s) => s.refresh);
